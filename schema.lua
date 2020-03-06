@@ -35,9 +35,9 @@ return {
     {config = {
       type = "record",
       fields = {
-          { connect_timeout = { default = 100, type = "number" }},
-          { send_timeout = { default = 600, type = "number" }},
-         { read_timeout = { default = 600, type = "number" }},
+          { connect_timeout = { default = 1000, type = "number" }},
+          { send_timeout = { default = 6000, type = "number" }},
+         { read_timeout = { default = 6000, type = "number" }},
          { upstream = {
             type = "record",
             required = true,

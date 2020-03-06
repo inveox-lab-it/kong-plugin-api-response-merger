@@ -23,18 +23,13 @@ function ResponseTransformerHandler:access(conf)
     client:set_timeouts(conf.connect_timeout, conf.send_timeout, conf.read_timeout)
     local req_headers = request.get_headers()
     req_headers['host'] = upstream.host_header
-    local client_body_reader, err = client:get_client_body_reader()
-    if err then
-        kong_log_err('error reading request body', err)
-        return kong.response.exit(500, {message=err})
-    end
 
     local req_path = request.get_path()
     local res, err = client:request_uri(upstream.uri .. req_path, {
       method = request.get_method(),
       headers = req_headers,
       query = request.get_raw_query(),
-      body = client_body_reader
+      body = request.get_raw_body()
     })
     
     if not res then
@@ -50,7 +45,6 @@ function ResponseTransformerHandler:access(conf)
   local keys_to_extend = nil
   local data_path = '$'
   for _, path in ipairs(conf.paths) do
-      kong_log_err('trying to match regepx', path.path, ' ', req_path)
     if match(req_path, path.path, 'io') then
         keys_to_extend = path.keys_to_extend
         data_path = path.data_path
@@ -67,8 +61,6 @@ function ResponseTransformerHandler:access(conf)
       -- end
       local data = cjson.decode(res.body)
       local data_to_transform = jp.query(data, data_path)
-    kong_log_err('data to transform', data_path)
-      kong_log_err('data to transform', cjson.encode(data_to_transform))
       local body_transformed = body_transformer.transform_json_body(client, keys_to_extend, data_to_transform[1])
       if data_path == '$' then
           data = body_transformed

@@ -38,7 +38,6 @@ local function is_json_path_array(str)
 end
 
 local function set_in_table_arr(path, table, value, src_resource_name, des_resource_id_key)
-  kong_log_err('path before ', paths)
   path = sub(path, '\\$\\.\\.', '')
   path = sub(path, '\\$\\.', '')
   local paths = split(path, '.')
@@ -47,8 +46,6 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
   local current = table
   local by_id = {}
   local dest_resource_key = path
-  kong_log_err('paths', paths)
-  kong_log_err('path ', paths)
   if paths_len > 0 then
     dest_resource_key = paths[1]
   end
@@ -60,7 +57,6 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
     by_id[id] = v
   end
 
-  kong_log_err('path2', dest_resource_key)
   for _, v in pairs(current) do
     local id =  jp.query(v, des_resource_id_key)[1]
     v[dest_resource_key] = by_id[id]
@@ -98,8 +94,6 @@ function _M.transform_json_body(client, keys_to_extend, buffered_data)
       config = v,
       ids = jp.query(json_body, v.resourceIdKey)
     }
-    kong_log_err('resources key ', v.resourceIdKey)
-    kong_log_err('resources ', cjson.encode(resources))
   end
 
   for rK, rV in pairs(resources) do
