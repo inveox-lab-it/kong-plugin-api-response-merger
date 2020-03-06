@@ -24,7 +24,11 @@ local keys_to_extend_type ={
            { apiUrl = {
                required = false,
                type = "string"
-           }}
+           }},
+            { apiResourceName = {
+                required = false,
+                type = "string"
+            }}
        }
      }
  }
@@ -35,9 +39,16 @@ return {
     {config = {
       type = "record",
       fields = {
-          { connect_timeout = { default = 1000, type = "number" }},
-          { send_timeout = { default = 6000, type = "number" }},
-         { read_timeout = { default = 6000, type = "number" }},
+          { http_config = {
+            type = "record",
+            fields = {
+                { connect_timeout = { default = 1000, type = "number" }},
+                { send_timeout = { default = 6000, type = "number" }},
+               { read_timeout = { default = 6000, type = "number" }},
+               { keepalive_timeout = { default = 60, type = "number" }},
+              { keepalive_pool_size = { default = 1000, type = "number" }},
+            }
+          }},
          { upstream = {
             type = "record",
             required = true,
