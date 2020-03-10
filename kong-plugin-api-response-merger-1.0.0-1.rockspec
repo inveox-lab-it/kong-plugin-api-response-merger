@@ -1,7 +1,7 @@
 package= "kong-plugin-api-response-merger"
-version = "1.0.0"
+version = "1.0.0-1"
 description = {
-  summary = "Kong plugin for merging respones from microservices",
+  summary = "Kong plugin for merging responses from microservices",
   homepage = "http://github.com/inveox-lab-it/kong-plugin-api-response-merger",
   license = "MIT"
 }

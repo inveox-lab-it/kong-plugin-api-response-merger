@@ -32,7 +32,7 @@ function APIResponseMergerHandler:access(conf)
   local req_path = request.get_path()
   local start_timer, stop_timer = timer(upstream.uri)
   start_timer()
-  local res, err = client:request_uri(upstream.uri .. req_path, {
+  local res, err = client:request_uri(upstream.uri .. (conf.upstream.path_prefix or '') .. req_path, {
     method = req_method,
     headers = req_headers,
     query = request.get_raw_query(),
@@ -46,6 +46,7 @@ function APIResponseMergerHandler:access(conf)
     return response.exit(500, {message=err})
   end
 
+  res.headers['Transfer-Encoding'] = nil
   if res.status ~= 200 then
     kong.log.err('Not 200 ' .. res.status .. ' ' .. ' body: ' .. res.body)
     return response.exit(res.status, res.body, res.headers)
@@ -79,9 +80,7 @@ function APIResponseMergerHandler:access(conf)
       body_transformer.set_in_table(data_path, data, result)
     end
     local data_json = cjson.encode(data)
-    local res_headers = res.headers
-    res_headers['Transfer-Encoding'] = nil
-    return response.exit(res.status, data_json, res_headers)
+    return response.exit(res.status, data_json, res.headers)
   else
     kong.log.warn('No match', req_path)
   end

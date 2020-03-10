@@ -111,7 +111,7 @@ local function fetch(resource_key, resource_config, http_config)
   end
 
   if res.status ~= 200 then
-    kong.log.err('Wrong respone from upstream resource '.. req_uri .. ' status:  ' .. res.status .. ' ' .. ' body: ' .. res.body)
+    kong.log.err('Wrong response from upstream resource '.. req_uri .. ' status:  ' .. res.status .. ' ' .. ' body: ' .. res.body)
     return {false, res.body}
   end
 
@@ -150,7 +150,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
   for i = 1, #threads_json_query do
     local ok, res = wait(threads_json_query[i])
     if not ok then
-      kong.log.err('Threads wait err', res)
+      kong.log.err('Threads wait err: ', res)
       return false, res
     end
     local ids, resource_key = unpack(res)

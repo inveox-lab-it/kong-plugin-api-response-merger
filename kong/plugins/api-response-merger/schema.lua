@@ -59,6 +59,7 @@ return {
           required = true,
           fields = {
             { host_header = { required = true, type = "string"}},
+            { path_prefix = { required = false, type = "string"}},
             { uri = { required = true, type = "string" }},
           }
         }},
