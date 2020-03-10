@@ -122,13 +122,13 @@ local function fetch(resource_key, resource_config, http_config)
   end
 
   local resource_body_query = jp.query(resource_body_parsed, api.data_path)
-  if #resource_body_query == 1 then
+  if resource_body_query ~= nil and #resource_body_query == 1 then
     local resource_body = resource_body_query[1]
     setmetatable(resource_body, getmetatable(resource_body_parsed))
     return {true, {resource_key, resource_body}}
   end
 
-  kong.log.err('Invalid response from upstream resource '.. resource_key ..' Multiple data data_len: ', #resource_body_query)
+  kong.log.err('Invalid response from upstream resource '.. resource_key ..' Multiple data data_len: ', resource_body_query)
   return {false, 'something wrong'}
 end
 

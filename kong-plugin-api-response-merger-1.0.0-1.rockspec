@@ -9,10 +9,7 @@ source = {
   url = "git://github.com/inveox-lab-it/kong-plugin-api-response-merger",
   tag = "1.0.0"
 }
-dependencies = {
-    "resty.http",
-    "cjson"
-}
+dependencies = {}
 supported_platforms = {
   "linux", 
   "macosx"

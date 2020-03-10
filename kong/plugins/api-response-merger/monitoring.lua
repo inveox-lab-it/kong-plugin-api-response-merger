@@ -1,8 +1,11 @@
 local url_parser = require 'socket.url'
-local prom_expo = require 'kong.plugins.prometheus-inveox.exporter'
+local status, prom_expo = pcall(require, 'kong.plugins.prometheus-inveox.exporter')
 
 local metrics = nil
 local function init() 
+  if not status then
+    return
+  end
   local prometheus = prom_expo.get_prometheus()
   if prometheus == nil then
       kong.log.warn('Prometheus plugin not enabled')
@@ -40,3 +43,4 @@ return {
     timer = timer,
     init = init
 }
+-- vim: filetype=lua:expandtab:shiftwidth=2:tabstop=4:softtabstop=2:textwidth=80

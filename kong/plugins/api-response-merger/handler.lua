@@ -52,6 +52,10 @@ function APIResponseMergerHandler:access(conf)
     return response.exit(res.status, res.body, res.headers)
   end
 
+  if not conf.paths then
+    return response.exit(res.status, res.body, res.headers)
+  end
+
   local keys_to_extend = nil
   local data_path = '$'
   for _, path in ipairs(conf.paths) do
@@ -65,20 +69,22 @@ function APIResponseMergerHandler:access(conf)
   if keys_to_extend ~= nil and is_json_body(res.headers['content-type']) then
     local data = cjson.decode(res.body)
     local data_to_transform = jp.query(data, data_path)
+
     if #data_to_transform ~= 1 then
       kong.log.warn('No data to transform in path ', data_path)
       return response.exit(res.status, res.body, res.headers)
     end
-
     local ok, result = body_transformer.transform_json_body(keys_to_extend, data_to_transform[1], http_config)
     if not ok then
       return response.exit(500, result)
     end
+
     if data_path == '$' then
       data = result
     else
       body_transformer.set_in_table(data_path, data, result)
     end
+
     local data_json = cjson.encode(data)
     return response.exit(res.status, data_json, res.headers)
   else

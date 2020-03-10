@@ -1,12 +1,14 @@
 local api_type = {
-  required = false,
+  required = true,
   type = "record",
   fields = {
     { url = {
-      type = "string"
+      type = "string",
+      required = true
     }},
     { data_path = {
-      type = "string"
+      type = "string",
+      default = "$"
     }},
     { query_param_name = {
       type = "string",
@@ -26,11 +28,11 @@ local keys_to_extend_type ={
     type = "record",
     fields = {
       { resource_id_path = {
-        required = false,
+        required = true,
         type = "string"
       }},
       { resource_key = {
-        required = false,
+        required = true,
         type = "string"
       }},
       { api = api_type }
