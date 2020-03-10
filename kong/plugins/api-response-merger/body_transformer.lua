@@ -2,6 +2,9 @@ local cjson = require('cjson.safe').new()
 local utils = require 'kong.tools.utils'
 local http = require 'resty.http'
 local jp = require 'kong.plugins.api-response-merger.jsonpath'
+local monitoring = require 'kong.plugins.api-response-merger.monitoring'
+local timer = monitoring.timer
+
 local split = utils.split
 local kong = kong -- luacheck: ignore
 
@@ -80,10 +83,11 @@ local function fetch(resource_key, resource_config, http_config)
   local api = config.api
   local req_uri = api.url
   local ids_len = resource_config.ids_len
-  if ids_len  > 1 then
+  local query_param_name = api.query_param_name
+  if query_param_name ~= nil then
     local query_join = ''
     for _, id in ipairs(resource_config.ids) do
-      req_query = req_query .. query_join .. api.query_param_name .. '=' .. id
+      req_query = req_query .. query_join .. query_param_name .. '=' .. id
       query_join = '&'
     end
     req_query = req_query .. '&size=' .. (ids_len + 1)
@@ -91,13 +95,16 @@ local function fetch(resource_key, resource_config, http_config)
     req_uri = req_uri .. resource_config.ids[1]
   end
 
+  local start_timer, stop_timer = timer(req_uri)
   local client = http.new()
   client:set_timeouts(http_config.connect_timeout, http_config.send_timeout, http_config.read_timeout)
+  start_timer()
   local res, err = client:request_uri(req_uri, {
     query = req_query,
     headers = kong.request.get_headers(),
   })
   client:set_keepalive(http_config.keepalive_timeout, http_config.keepalive_pool_size)
+  stop_timer()
   if not res then
     kong.log.err('Invalid response from upstream resource ', req_uri , ' ', err)
     return {false, err}
@@ -121,7 +128,7 @@ local function fetch(resource_key, resource_config, http_config)
     return {true, {resource_key, resource_body}}
   end
 
-  kong.log.err('Invalid response from upstream resource.'.. resource_key ..' Multiple data data_len: ', #resource_body_query)
+  kong.log.err('Invalid response from upstream resource '.. resource_key ..' Multiple data data_len: ', #resource_body_query)
   return {false, 'something wrong'}
 end
 
@@ -170,8 +177,8 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     end
     local resource_key, resource_body = unpack(result)
     local resource = resources[resource_key]
-    if resource.ids_len > 1 then
-      local config = resource.config
+    local config = resource.config
+    if config.api.query_param_name ~= nil then
       set_in_table_arr(resource_key, upstream_body, resource_body, config.api.id_key, config.resource_id_path)
     else
       set_in_table(resource_key, upstream_body, resource_body)

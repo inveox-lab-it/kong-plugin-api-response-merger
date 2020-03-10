@@ -1,7 +1,9 @@
 local body_transformer = require 'kong.plugins.api-response-merger.body_transformer'
 local jp = require 'kong.plugins.api-response-merger.jsonpath'
+local monitoring = require 'kong.plugins.api-response-merger.monitoring'
 local cjson = require('cjson.safe').new()
 cjson.decode_array_with_array_mt(true)
+local timer = monitoring.timer
 
 local is_json_body = body_transformer.is_json_body
 local kong = kong
@@ -28,6 +30,8 @@ function APIResponseMergerHandler:access(conf)
   end
 
   local req_path = request.get_path()
+  local start_timer, stop_timer = timer(upstream.uri)
+  start_timer()
   local res, err = client:request_uri(upstream.uri .. req_path, {
     method = req_method,
     headers = req_headers,
@@ -35,9 +39,10 @@ function APIResponseMergerHandler:access(conf)
     body = request.get_raw_body()
   })
   client:set_keepalive(http_config.keepalive_timeout, http_config.keepalive_pool_size)
+  stop_timer()
 
   if not res then
-    kong.log.err('Invalid response from upstream', upstream.uri .. req_path .. ' ' .. err)
+    kong.log.err('Invalid response from upstream ', upstream.uri .. req_path .. ' err: ' .. err)
     return response.exit(500, {message=err})
   end
 
@@ -81,6 +86,10 @@ function APIResponseMergerHandler:access(conf)
     kong.log.warn('No match', req_path)
   end
   response.exit(res.status, res.body, res.headers)
+end
+
+function APIResponseMergerHandler.init_worker()
+  monitoring.init()
 end
 
 APIResponseMergerHandler.PRIORITY = 1000
