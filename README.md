@@ -158,6 +158,7 @@ $ curl -X GET http://service-b/api/v1/data/data/b
 
 This plugin will allow to change upstream respone by extending it respone of data from service-a and service-b. See example below
 
+```bash
 $ curl -X GET http://kong/v1/data/upstream-1
 {
     "id": "upstream-1",
