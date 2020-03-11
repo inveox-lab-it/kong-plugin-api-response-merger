@@ -3,7 +3,7 @@ local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
 local cjson = require('cjson.safe').new()
 cjson.decode_array_with_array_mt(true)
-local timer = monitoring.timer
+local start_timer = monitoring.start_timer
 
 local is_json_body = body_transformer.is_json_body
 local kong = kong
@@ -30,8 +30,7 @@ function APIResponseMergerHandler:access(conf)
   end
 
   local req_path = request.get_path()
-  local start_timer, stop_timer = timer(upstream.uri)
-  start_timer()
+  local timer = start_timer(upstream.uri)
   local res, err = client:request_uri(upstream.uri .. (conf.upstream.path_prefix or '') .. req_path, {
     method = req_method,
     headers = req_headers,
@@ -39,7 +38,7 @@ function APIResponseMergerHandler:access(conf)
     body = request.get_raw_body()
   })
   client:set_keepalive(http_config.keepalive_timeout, http_config.keepalive_pool_size)
-  stop_timer()
+  timer:stop()
 
   if not res then
     kong.log.err('Invalid response from upstream ', upstream.uri .. req_path .. ' err: ' .. err)
@@ -48,7 +47,7 @@ function APIResponseMergerHandler:access(conf)
 
   res.headers['Transfer-Encoding'] = nil
   if res.status ~= 200 then
-    kong.log.err('Not 200 ' .. res.status .. ' ' .. ' body: ' .. res.body)
+    kong.log.err('Invalid response from upstream  ', upstream.uri, ' sc: ', res.status)
     return response.exit(res.status, res.body, res.headers)
   end
 
@@ -58,7 +57,9 @@ function APIResponseMergerHandler:access(conf)
 
   local keys_to_extend = nil
   local data_path = '$'
-  for _, path in ipairs(conf.paths) do
+  local paths = conf.paths
+  for i = 1, #paths do
+    local path = paths[i]
     if match(req_path, path.path, 'io') then
       keys_to_extend = path.keys_to_extend
       data_path = path.upstream_data_path
@@ -70,7 +71,7 @@ function APIResponseMergerHandler:access(conf)
     local data = cjson.decode(res.body)
     local data_to_transform = jp.query(data, data_path)
 
-    if #data_to_transform ~= 1 then
+    if data_to_transform == nil or #data_to_transform ~= 1 then
       kong.log.warn('No data to transform in path ', data_path)
       return response.exit(res.status, res.body, res.headers)
     end

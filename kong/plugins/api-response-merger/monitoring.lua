@@ -25,22 +25,22 @@ local function report_time(url, time)
     metrics.upstream_response_gauge:set(time, {host})
 end
 
-local function timer(url) 
-    local start_time = nil
-    local start_timer = function ()
-        start_time = ngx.now()
-    end
+local timer = {}
+local meta_timer = {__index = timer}
+function timer.stop(self)
+  local time = ngx.now() - self.start_time
+  report_time(self.url, time)
+end
 
-    local stop_timer = function () 
-        local time = ngx.now() - start_time
-        report_time(url, time)
-    end
-
-    return start_timer, stop_timer
+local function start_timer(url) 
+  return setmetatable({
+    start_time = ngx.now(),
+    url = url
+  }, meta_timer)
 end
 
 return {
-    timer = timer,
-    init = init
+  start_timer = start_timer,
+  init = init
 }
 -- vim: filetype=lua:expandtab:shiftwidth=2:tabstop=4:softtabstop=2:textwidth=80

@@ -3,7 +3,7 @@ local utils = require 'kong.tools.utils'
 local http = require 'resty.http'
 local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
-local timer = monitoring.timer
+local start_timer = monitoring.start_timer
 
 local split = utils.split
 local kong = kong -- luacheck: ignore
@@ -69,7 +69,7 @@ local function set_in_table(path, table, value)
   end
 
   local current = table[paths[1]]
-  for i = 2, paths_len - 2 do
+  for i = 2, paths_len - 1 do
     current = current[path[i]]
   end
   current[path] = value
@@ -86,8 +86,9 @@ local function fetch(resource_key, resource_config, http_config)
   local query_param_name = api.query_param_name
   if query_param_name ~= nil then
     local query_join = ''
-    for _, id in ipairs(resource_config.ids) do
-      req_query = req_query .. query_join .. query_param_name .. '=' .. id
+    local ids = resource_config.ids
+    for i = 1, ids_len do
+      req_query = req_query .. query_join .. query_param_name .. '=' .. ids[i]
       query_join = '&'
     end
     req_query = req_query .. '&size=' .. (ids_len + 1)
@@ -95,29 +96,28 @@ local function fetch(resource_key, resource_config, http_config)
     req_uri = req_uri .. resource_config.ids[1]
   end
 
-  local start_timer, stop_timer = timer(req_uri)
   local client = http.new()
   client:set_timeouts(http_config.connect_timeout, http_config.send_timeout, http_config.read_timeout)
-  start_timer()
+  local timer = start_timer(req_uri)
   local res, err = client:request_uri(req_uri, {
     query = req_query,
     headers = kong.request.get_headers(),
   })
   client:set_keepalive(http_config.keepalive_timeout, http_config.keepalive_pool_size)
-  stop_timer()
+  timer:stop()
   if not res then
-    kong.log.err('Invalid response from upstream resource ', req_uri , ' ', err)
+    kong.log.err('Invalid response from upstream resource url: ', req_uri , ' err: ', err)
     return {false, err}
   end
 
   if res.status ~= 200 then
-    kong.log.err('Wrong response from upstream resource '.. req_uri .. ' status:  ' .. res.status .. ' ' .. ' body: ' .. res.body)
-    return {false, res.body}
+    kong.log.err('Wrong response from upstream resource url: ', req_uri, ' status:  ', res.status)
+    return {false, 'invalid response from upstream, sc: ' .. res.status}
   end
 
   local resource_body_parsed = read_json_body(res.body)
   if resource_body_parsed == nil then
-    kong.log.err('Unable to parse response from ' .. req_uri .. ' body: ' .. res.body)
+    kong.log.err('Unable to parse response from ',  req_uri)
     return { false, 'unable to parse resource body'}
   end
 
@@ -128,19 +128,23 @@ local function fetch(resource_key, resource_config, http_config)
     return {true, {resource_key, resource_body}}
   end
 
-  kong.log.err('Invalid response from upstream resource '.. resource_key ..' Multiple data data_len: ', resource_body_query)
+  kong.log.err('Invalid response from upstream resource ', resource_key, ' Multiple data data_len: ', resource_body_query)
   return {false, 'something wrong'}
 end
 
 local function query_json(json_body, resource_path, resource_key)
+  if resource_path == nil then
+    return {{}, resource_key}
+  end
   local ids = jp.query(json_body, resource_path)
-  return  {ids, resource_key}
+  return {ids, resource_key}
 end
 
 function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
   local resources = {}
   local threads_json_query = {}
-  for _, v in ipairs(keys_to_extend) do
+  for i = 1, #keys_to_extend do
+    local v = keys_to_extend[i]
     resources[v.resource_key] =  {
       config = v
     }
@@ -172,7 +176,6 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     end
     local status, result = unpack(res)
     if not status then
-      kong.log.err('Error in fetching, err: ', result)
       return false, result
     end
     local resource_key, resource_body = unpack(result)

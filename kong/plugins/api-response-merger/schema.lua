@@ -28,7 +28,7 @@ local keys_to_extend_type ={
     type = "record",
     fields = {
       { resource_id_path = {
-        required = true,
+        required = false,
         type = "string"
       }},
       { resource_key = {
