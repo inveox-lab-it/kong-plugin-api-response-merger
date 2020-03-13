@@ -4,65 +4,6 @@
 
 This plugin transforms the response body from upstream by adding additional fields or changing the existing one.
 
-## Configuration
-
-### Enabling the plugin on a Service
-
-Configure this plugin on a Service by making the following request:
-
-```bash
-$ curl -X POST http://kong:8001/services/{service}/plugins \
-    --data "name=api-response-merger"
-```
-
-`service`: the `id` or `name` of the Service that this plugin configuration will target.
-
-### Enabling the plugin on a Route
-
-Configure this plugin on a Route with:
-
-```bash
-$ curl -X POST http://kong:8001/routes/{route_id}/plugins \
-    --data "name=api-response-merger"
-```
-
-`route_id`: the `id` of the Route that this plugin configuration will target.
-
-### Enabling the plugin on a Consumer
-You can use the `http://localhost:8001/plugins` endpoint to enable this plugin on specific Consumers:
-
-```bash
-$ curl -X POST http://kong:8001/plugins \
-    --data "name=api-response-merger" \
-    --data "consumer_id={consumer_id}"
-```
-
-Where `consumer_id` is the `id` of the Consumer we want to associate with this plugin.
-
-You can combine `consumer_id` and `service_id` in the same request, to furthermore narrow the scope of the plugin.
-
-| form parameter                                    | default             | description                                                                                                                                                                                        |
-| ---                                               | ---                 | ---                                                                                                                                                                                                |
-| `name`                                            |                     | The name of the plugin to use, in this case `request-transformer`
-| `service_id`                                      |                     | The id of the Service which this plugin will target.
-| `route_id`                                        |                     | The id of the Route which this plugin will target.
-| `enabled`                                         | `true`              | Whether this plugin will be applied.
-| `consumer_id`                                     |                     | The id of the Consumer which this plugin will target.
-| `config.upstream.uri`                             |                     | Base upstream uri 
-| `config.upstream.host_header`                     |                     | Host header which should be passed to upstream 
-| `config.upstream.path_prefix`                     |    ``               | Prefix for path to upstream
-| `config.paths`                                     |                     | List of paths on which plugin should merge response 
-| `config.paths[0].path`                             |                     | Regular expression for path 
-| `config.paths[0].upstream_data_path`               |  `$`                | JSON path for data to transform 
-| `config.paths[0].keys_to_extend`                   |                     | List of JSON keys to change 
-| `config.paths[0.keys_to_extend[0].resource_id_path`|                     | JSON path for id of resource in upstream respone 
-| `config.paths[0.keys_to_extend[0].resource_key`    |                     | JSON path for key where to put response of resource upstream 
-| `config.paths[0.keys_to_extend[0].api`             |                     | Object with config for resource upstream 
-| `config.paths[0.keys_to_extend[0].api.url`         |                     | Adress for api from given resource can be retrived
-| `config.paths[0.keys_to_extend[0].api.data_path`   | `$`                 | JSON path for resource data 
-| `config.paths[0.keys_to_extend[0].api.query_param_name`   | nil               | Query string parameter name when accessing multiple resources 
-
-
 ## Configuration for Kubernetes
 Full config for kubernetes kong plugin
 
@@ -180,3 +121,64 @@ $ curl -X GET http://kong/v1/data/upstream-1
     }
 }
 ```
+
+
+## Configuration
+
+### Enabling the plugin on a Service
+
+Configure this plugin on a Service by making the following request:
+
+```bash
+$ curl -X POST http://kong:8001/services/{service}/plugins \
+    --data "name=api-response-merger"
+```
+
+`service`: the `id` or `name` of the Service that this plugin configuration will target.
+
+### Enabling the plugin on a Route
+
+Configure this plugin on a Route with:
+
+```bash
+$ curl -X POST http://kong:8001/routes/{route_id}/plugins \
+    --data "name=api-response-merger"
+```
+
+`route_id`: the `id` of the Route that this plugin configuration will target.
+
+### Enabling the plugin on a Consumer
+You can use the `http://localhost:8001/plugins` endpoint to enable this plugin on specific Consumers:
+
+```bash
+$ curl -X POST http://kong:8001/plugins \
+    --data "name=api-response-merger" \
+    --data "consumer_id={consumer_id}"
+```
+
+Where `consumer_id` is the `id` of the Consumer we want to associate with this plugin.
+
+You can combine `consumer_id` and `service_id` in the same request, to furthermore narrow the scope of the plugin.
+
+| form parameter                                    | default             | description                                                                                                                                                                                        |
+| ---                                               | ---                 | ---                                                                                                                                                                                                |
+| `name`                                            |                     | The name of the plugin to use, in this case `request-transformer`
+| `service_id`                                      |                     | The id of the Service which this plugin will target.
+| `route_id`                                        |                     | The id of the Route which this plugin will target.
+| `enabled`                                         | `true`              | Whether this plugin will be applied.
+| `consumer_id`                                     |                     | The id of the Consumer which this plugin will target.
+| `config.upstream.uri`                             |                     | Base upstream uri 
+| `config.upstream.host_header`                     |                     | Host header which should be passed to upstream 
+| `config.upstream.path_prefix`                     |    ``               | Prefix for path to upstream
+| `config.paths`                                     |                     | List of paths on which plugin should merge response 
+| `config.paths[0].path`                             |                     | Regular expression for path 
+| `config.paths[0].upstream_data_path`               |  `$`                | JSON path for data to transform 
+| `config.paths[0].keys_to_extend`                   |                     | List of JSON keys to change 
+| `config.paths[0.keys_to_extend[0].resource_id_path`|                     | JSON path for id of resource in upstream respone 
+| `config.paths[0.keys_to_extend[0].resource_key`    |                     | JSON path for key where to put response of resource upstream 
+| `config.paths[0.keys_to_extend[0].api`             |                     | Object with config for resource upstream 
+| `config.paths[0.keys_to_extend[0].api.url`         |                     | Adress for api from given resource can be retrived
+| `config.paths[0.keys_to_extend[0].api.data_path`   | `$`                 | JSON path for resource data 
+| `config.paths[0.keys_to_extend[0].api.query_param_name`   | nil               | Query string parameter name when accessing multiple resources 
+
+
