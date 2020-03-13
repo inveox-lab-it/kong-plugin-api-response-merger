@@ -30,6 +30,7 @@ function _M.is_json_body(content_type)
   return content_type and find(lower(content_type), 'application/json', nil, true)
 end
 
+-- FIXME:? this method will handle only depth 1
 local function set_in_table_arr(path, table, value, src_resource_name, des_resource_id_key)
   path = sub(path, '\\$\\.\\.', '')
   path = sub(path, '\\$\\.', '')
@@ -54,6 +55,7 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
   end
 end
 
+-- This method "should" handle depth 2 and more - not tested
 local function set_in_table(path, table, value)
   path = sub(path, '\\$\\.', '')
   local paths = split(path, '.')
@@ -77,6 +79,7 @@ local function set_in_table(path, table, value)
 end
 _M.set_in_table = set_in_table
 
+-- method used for calling services for given key
 local function fetch(resource_key, resource_config, http_config)
   local req_query = '?'
   local config = resource_config.config
@@ -103,6 +106,7 @@ local function fetch(resource_key, resource_config, http_config)
     query = req_query,
     headers = kong.request.get_headers(),
   })
+  -- put connection to pool / we don't close it
   client:set_keepalive(http_config.keepalive_timeout, http_config.keepalive_pool_size)
   timer:stop()
   if not res then
@@ -143,6 +147,7 @@ end
 function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
   local resources = {}
   local threads_json_query = {}
+  -- prepare threads to find ids to query resources
   for i = 1, #keys_to_extend do
     local v = keys_to_extend[i]
     resources[v.resource_key] =  {
@@ -162,6 +167,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     resources[resource_key].ids_len = #ids
   end
 
+  -- prepare threads to call resources for data
   local threads = {}
 
   for resource_key, value in pairs(resources) do
@@ -181,6 +187,8 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     local resource_key, resource_body = unpack(result)
     local resource = resources[resource_key]
     local config = resource.config
+    -- if user passed query_param_name we assume that we should query for
+    -- multiple resources
     if config.api.query_param_name ~= nil then
       set_in_table_arr(resource_key, upstream_body, resource_body, config.api.id_key, config.resource_id_path)
     else
