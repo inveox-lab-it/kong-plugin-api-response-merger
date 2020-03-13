@@ -115,7 +115,7 @@ plugin: api-response-merger
 
 This paragraph will show how usage of this plugins looks like. We assume that there are 3 REST APIs which can be querd using below example
 
-We have ipstream service that returns response with only ids of resources from service-a and service-b
+We have upstream service that returns response with only ids of resources from service-a and service-b
 ```bash
 $ curl -X GET http://upstream/v1/data/upstream-1
 {
@@ -179,4 +179,3 @@ $ curl -X GET http://kong/v1/data/upstream-1
     }
 }
 ```
-
