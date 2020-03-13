@@ -2,7 +2,7 @@
 
 ## Synopsis
 
-This plugin transforms the response body from upstream and can extend it by adding additional fields.
+This plugin transforms the response body from upstream by adding additional fields or changing the existing one.
 
 ## Configuration
 
