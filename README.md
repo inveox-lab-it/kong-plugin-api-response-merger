@@ -174,11 +174,11 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `config.paths[0].path`                             |                     | Regular expression for path 
 | `config.paths[0].upstream_data_path`               |  `$`                | JSON path for data to transform 
 | `config.paths[0].keys_to_extend`                   |                     | List of JSON keys to change 
-| `config.paths[0.keys_to_extend[0].resource_id_path`|                     | JSON path for id of resource in upstream respone 
-| `config.paths[0.keys_to_extend[0].resource_key`    |                     | JSON path for key where to put response of resource upstream 
-| `config.paths[0.keys_to_extend[0].api`             |                     | Object with config for resource upstream 
-| `config.paths[0.keys_to_extend[0].api.url`         |                     | Adress for api from given resource can be retrived
-| `config.paths[0.keys_to_extend[0].api.data_path`   | `$`                 | JSON path for resource data 
-| `config.paths[0.keys_to_extend[0].api.query_param_name`   | nil               | Query string parameter name when accessing multiple resources 
+| `config.paths[0].keys_to_extend[0].resource_id_path`|                     | JSON path for id of resource in upstream respone 
+| `config.paths[0].keys_to_extend[0].resource_key`    |                     | JSON path for key where to put response of resource upstream 
+| `config.paths[0].keys_to_extend[0].api`             |                     | Object with config for resource upstream 
+| `config.paths[0].keys_to_extend[0].api.url`         |                     | Adress for api from given resource can be retrived
+| `config.paths[0].keys_to_extend[0].api.data_path`   | `$`                 | JSON path for resource data 
+| `config.paths[0].keys_to_extend[0].api.query_param_name`   | nil               | Query string parameter name when accessing multiple resources 
 
 
