@@ -13,6 +13,15 @@ local match = ngx.re.match
 
 local APIResponseMergerHandler = {}
 
+local function contains(arr, search)
+  for i = 1, #arr do
+    if arr[i] == search then
+      return true
+    end
+  end
+  return false
+end
+
 function APIResponseMergerHandler:access(conf)
   local request = kong.request
   local response = kong.response
@@ -61,9 +70,11 @@ function APIResponseMergerHandler:access(conf)
   for i = 1, #paths do
     local path = paths[i]
     if match(req_path, path.path, 'io') then
-      keys_to_extend = path.keys_to_extend
-      data_path = path.upstream_data_path
-      break
+        if contains(path.methods, req_method) then
+          keys_to_extend = path.keys_to_extend
+          data_path = path.upstream_data_path
+          break
+        end
     end
   end
 
