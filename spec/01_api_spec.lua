@@ -47,6 +47,7 @@ describe('Plugin: api-response-merger API', function()
           paths = {
             {
               path = '/v1/resources/.+',
+              methods = {'GET'},
               keys_to_extend = {
                 {
                   resource_id_path = '$.a.id',

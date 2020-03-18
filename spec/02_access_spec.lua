@@ -82,6 +82,7 @@ describe("Plugin: api-response-merger access", function()
         paths = {
           {
             path = '/status/.+',
+            methods = {'POST'},
             upstream_data_path = '$',
             keys_to_extend = {
               {
@@ -98,6 +99,7 @@ describe("Plugin: api-response-merger access", function()
           {
             path = '/just-add',
             upstream_data_path = '$',
+            methods = {'POST'},
             keys_to_extend = {
               {
                 resource_key = '$.add',

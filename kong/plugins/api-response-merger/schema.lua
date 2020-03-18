@@ -40,6 +40,21 @@ local keys_to_extend_type ={
   }
 }
 
+local http_methods_arr_type = {
+  type = "array",
+  default = {"GET"},
+  elements = {
+    type = "string",
+    one_of = {
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+    }
+  }
+}
+
 return {
   name = "api-response-merger",
   fields = {
@@ -72,6 +87,7 @@ return {
             type = "record",
             fields = {
               { path = { type = "string", default = "/" }},
+              { methods = http_methods_arr_type },
               { upstream_data_path = { type = "string", default = "$" }},
               { keys_to_extend = keys_to_extend_type }
             }
