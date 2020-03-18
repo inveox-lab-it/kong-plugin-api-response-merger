@@ -14,7 +14,7 @@ local lower = string.lower
 local spawn = ngx.thread.spawn -- luacheck: ignore
 local wait = ngx.thread.wait -- luacheck: ignore
 local insert = table.insert
-local unpack = unpack or table.unpack
+local unpack = unpack or table.unpack --luacheck: ignore
 
 cjson.decode_array_with_array_mt(true)
 

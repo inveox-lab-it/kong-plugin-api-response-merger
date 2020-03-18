@@ -1,6 +1,5 @@
 local helpers = require "spec.helpers"
 local cjson = require "cjson"
-local socket = require "socket"
 
 local function http_server_with_body(port, body, sc)
   if sc == nil then
@@ -10,7 +9,6 @@ local function http_server_with_body(port, body, sc)
   local thread = threads.new({
     function(port, body, sc)
       local socket = require "socket"
-      local cjson = require "cjson"
       local server = assert(socket.tcp())
       assert(server:setoption('reuseaddr', true))
       local status = server:bind("*", port)
@@ -25,9 +23,11 @@ local function http_server_with_body(port, body, sc)
       end
       client:settimeout(3)
 
-      local lines = {}
-      local line, err
+      local line
       line, err = client:receive()
+      if err then
+        print('error on read', err)
+      end
       while line and line ~= ''  do
         line, err = client:receive()
         if err then
@@ -43,8 +43,6 @@ local function http_server_with_body(port, body, sc)
   return thread:start(false, false)
 end
 
-
-
 describe("Plugin: api-response-merger access", function()
   local proxy_client
   local service_a
@@ -56,7 +54,7 @@ describe("Plugin: api-response-merger access", function()
   local upstream_body =  { a = { id = 'resource_a_id'}, baz = "cux" }
 
   setup(function()
-    local bp = helpers.get_db_utils(strategy, {
+    local bp = helpers.get_db_utils(nil, {
         "routes",
         "services",
         "plugins",
@@ -150,9 +148,6 @@ describe("Plugin: api-response-merger access", function()
       collectgarbage()
   end)
 
-  before_each(function()
-  end)
-
   it("should merge response from two services", function()
     service_a = http_server_with_body(service_a_port, '{ "id": "resource_a_id", "value": "important"}')
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
@@ -170,8 +165,7 @@ describe("Plugin: api-response-merger access", function()
     local json = cjson.decode(body)
     assert.same({ a = { id = 'resource_a_id', value = 'important'}, baz = "cux" }, json)
   end)
-  
-  
+
   it("should merge response from two services - no id", function()
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
     service_b = http_server_with_body(service_b_port, '{ "cfg": "config-id", "something": "important"}')
@@ -190,7 +184,7 @@ describe("Plugin: api-response-merger access", function()
     local json = cjson.decode(body)
     assert.same({ a = { id = 'resource_a_id' }, baz = "cux" , add = { cfg = "config-id", something = "important" }}, json)
   end)
-  
+
   it("should handle 500 error response from upstream", function()
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
     service_b = http_server_with_body(service_b_port, '{ "cfg": "config-id", "something": "important"}', "500 Internal Server Error")
@@ -212,12 +206,12 @@ describe("Plugin: api-response-merger access", function()
       upstream = {
           body = '{ "cfg": "config-id", "something": "important"}',
           status = 500,
-          uri = 'http://127.0.0.1:27777' 
-        } 
+          uri = 'http://127.0.0.1:27777'
+        }
       }
     assert.same(expected, json)
   end)
-  
+
   it("should do nothing when path do not match", function()
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
     service_a = http_server_with_body(service_a_port, '{ "id": "resource_a_id", "value": "important"}')
@@ -236,7 +230,7 @@ describe("Plugin: api-response-merger access", function()
     local json = cjson.decode(body)
     assert.same({ a = { id = 'resource_a_id'}, baz = "cux" }, json)
   end)
-  
+
   it("should handle invalid json from resource", function()
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
     service_b = http_server_with_body(service_b_port, '{ "cfg": config-id", "something": "important"}')
@@ -258,12 +252,12 @@ describe("Plugin: api-response-merger access", function()
       upstream = {
           body = '{ "cfg": config-id", "something": "important"}',
           status = 200,
-          uri = 'http://127.0.0.1:27777' 
-        } 
+          uri = 'http://127.0.0.1:27777'
+        }
       }
     assert.same(expected, json)
   end)
-  
+
   it("should handle invalid json from upstream - do nothing", function()
     local ups_body = 'f---====aa"'
     upstream = http_server_with_body(upstream_port, ups_body)
@@ -281,6 +275,6 @@ describe("Plugin: api-response-merger access", function()
     local body = assert.res_status(200, res)
     assert.same(body,  ups_body)
   end)
-  
+
 end)
 -- vim: filetype=lua:expandtab:shiftwidth=2:tabstop=4:softtabstop=2:textwidth=80

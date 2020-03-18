@@ -13,14 +13,14 @@ local api_type = {
     { query_param_name = {
       type = "string",
       required = false
-    }}, 
+    }},
     { id_key = {
       type = "string"
     }}
   }
 }
 
-local keys_to_extend_type ={ 
+local keys_to_extend_type = {
   required = false,
   type = "array",
   default = {},

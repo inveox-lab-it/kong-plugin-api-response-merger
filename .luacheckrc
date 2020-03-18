@@ -1,4 +1,4 @@
-td             = "ngx_lua"
+std             = "ngx_lua"
 unused_args     = false
 redefined       = false
 max_line_length = false
@@ -7,7 +7,7 @@ max_line_length = false
 globals = {
   "_KONG",
   "kong",
-  "ngx.IS_CLI",
+  "ngxI",
 }
 
 
@@ -16,6 +16,9 @@ not_globals = {
   "table.getn",
 }
 
+exclude_files = {
+ "kong/**/jsonpath.lua"
+}
 
 files["spec/**/*.lua"] = {
   std = "ngx_lua+busted",
