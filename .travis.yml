@@ -1,0 +1,52 @@
+dist: trusty
+sudo: required
+
+language: java
+
+jdk:
+  - oraclejdk8
+
+notifications:
+  email: false
+
+addons:
+  postgresql: "9.5"
+  apt:
+    packages:
+      - net-tools
+      - libpcre3-dev
+      - build-essential
+
+services:
+  - docker
+
+env:
+  global:
+    - CASSANDRA_BASE=2.2.12
+    - CASSANDRA_LATEST=3.9
+    - KONG_REPOSITORY=kong
+    - KONG_TAG=2.0.2
+    - DOWNLOAD_CACHE=$HOME/download-cache
+    - INSTALL_CACHE=$HOME/install-cache
+    - DOWNLOAD_ROOT=$HOME/download-root
+    - BUSTED_ARGS="-o gtest -v --exclude-tags=flaky,ipv6"
+    - PLUGIN_NAME=api-reponse-merger
+    - KONG_PLUGINS=bundled,$PLUGIN_NAME
+    - KONG_TEST_PLUGINS=$KONG_PLUGINS
+    - TEST_FILE_PATH=$TRAVIS_BUILD_DIR/spec
+
+install:
+  - git clone --single-branch --branch master https://github.com/Kong/kong-ci.git ../kong-ci
+  - source ../kong-ci/setup_plugin_env.sh
+
+script:
+  - eval $LUACHECK_CMD
+  - eval $BUSTED_CMD
+
+cache:
+  apt: true
+  pip: true
+  directories:
+    - $DOWNLOAD_CACHE
+    - $INSTALL_CACHE
+    - $HOME/.ccm/repository
