@@ -203,11 +203,14 @@ describe("Plugin: api-response-merger access", function()
     local json = cjson.decode(body)
     local expected = {
       message = 'can handle only responses with 200 sc',
-      upstream = {
-          body = '{ "cfg": "config-id", "something": "important"}',
+      code = 'API_Gateway_ERROR',
+      error = 'Resource fetch error',
+      status = 500,
+      errors = {{
+          error = '{ "cfg": "config-id", "something": "important"}',
           status = 500,
           uri = 'http://127.0.0.1:27777'
-        }
+        }}
       }
     assert.same(expected, json)
   end)
@@ -249,11 +252,14 @@ describe("Plugin: api-response-merger access", function()
     local json = cjson.decode(body)
     local expected = {
       message = 'unable to parse response',
-      upstream = {
-          body = '{ "cfg": config-id", "something": "important"}',
+      code = 'API_Gateway_ERROR',
+      error = 'Resource fetch error',
+      status = 500,
+      errors  = {{
+          error = '{ "cfg": config-id", "something": "important"}',
           status = 200,
           uri = 'http://127.0.0.1:27777'
-        }
+        }}
       }
     assert.same(expected, json)
   end)

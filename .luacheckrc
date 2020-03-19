@@ -17,7 +17,9 @@ not_globals = {
 }
 
 exclude_files = {
- "kong/**/jsonpath.lua"
+ "kong/**/jsonpath.lua",
+ ".ci/**/*.lua",
+ "ci/**/*.lua"
 }
 
 files["spec/**/*.lua"] = {

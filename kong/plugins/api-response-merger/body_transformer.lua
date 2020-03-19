@@ -27,22 +27,28 @@ local function read_json_body(body)
 end
 
 local function create_error_response(message, req_uri, res)
+  local errors = {}
   local err_res = {
     message  = message,
+    status = 500,
+    error = 'Resource fetch error',
+    code = 'API_Gateway_ERROR',
   }
 
   if res.status then
-    err_res.upstream = {
+    insert(errors, {
       uri = req_uri,
       status = res.status,
-      body = res.body
-    }
+      error = res.body
+    })
   else
-    err_res.upstream = {
+    insert(errors, {
       uri = req_uri,
+      status = 0,
       error = res
-    }
+    })
   end
+  err_res.errors = errors
   return err_res
 end
 
