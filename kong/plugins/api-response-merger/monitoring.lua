@@ -5,7 +5,7 @@ local url_parser = require 'socket.url'
 local status, prom_expo = pcall(require, 'kong.plugins.prometheus-inveox.exporter')
 
 local metrics = nil
-local function init() 
+local function init()
   if not status then
     return
   end
@@ -35,7 +35,7 @@ function timer.stop(self)
   report_time(self.url, time)
 end
 
-local function start_timer(url) 
+local function start_timer(url)
   return setmetatable({
     start_time = ngx.now(),
     url = url
