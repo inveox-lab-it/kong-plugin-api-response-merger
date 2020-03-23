@@ -1,5 +1,4 @@
 local helpers = require 'spec.helpers'
-local cjson   = require 'cjson'
 
 describe('Plugin: api-response-merger API', function()
   local admin_client
@@ -32,7 +31,7 @@ describe('Plugin: api-response-merger API', function()
     })
     assert.res_status(400, res)
   end)
-  
+
   it('plugin can be configured full config', function()
     local res = assert(admin_client:send {
       method = 'POST',

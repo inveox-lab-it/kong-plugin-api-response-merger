@@ -1,5 +1,8 @@
 # Kong API response merger
 
+[![Build Status](https://travis-ci.org/inveox-lab-it/kong-plugin-api-response-merger.svg?branch=master)](https://travis-ci.org/inveox-lab-it/kong-plugin-api-response-merger)
+
+
 ## Synopsis
 
 This plugin transforms the response body from upstream by adding additional fields or changing the existing one.

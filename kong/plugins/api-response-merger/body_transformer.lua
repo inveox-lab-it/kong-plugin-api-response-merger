@@ -14,7 +14,7 @@ local lower = string.lower
 local spawn = ngx.thread.spawn -- luacheck: ignore
 local wait = ngx.thread.wait -- luacheck: ignore
 local insert = table.insert
-local unpack = unpack or table.unpack
+local unpack = unpack or table.unpack --luacheck: ignore
 
 cjson.decode_array_with_array_mt(true)
 
@@ -24,6 +24,32 @@ local function read_json_body(body)
   if body then
     return cjson.decode(body)
   end
+end
+
+local function create_error_response(message, req_uri, res)
+  local errors = {}
+  local err_res = {
+    message  = message,
+    status = 500,
+    error = 'Resource fetch error',
+    code = 'API_Gateway_ERROR',
+  }
+
+  if res.status then
+    insert(errors, {
+      uri = req_uri,
+      status = res.status,
+      error = res.body
+    })
+  else
+    insert(errors, {
+      uri = req_uri,
+      status = 0,
+      error = res
+    })
+  end
+  err_res.errors = errors
+  return err_res
 end
 
 function _M.is_json_body(content_type)
@@ -95,6 +121,7 @@ local function fetch(resource_key, resource_config, http_config)
       query_join = '&'
     end
     req_query = req_query .. '&size=' .. (ids_len + 1)
+    req_uri = req_uri .. req_query
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
   end
@@ -111,18 +138,18 @@ local function fetch(resource_key, resource_config, http_config)
   timer:stop()
   if not res then
     kong.log.err('Invalid response from upstream resource url: ', req_uri , ' err: ', err)
-    return {false, err}
+    return {false, create_error_response('invalid response from resource', req_uri, err)}
   end
 
   if res.status ~= 200 then
     kong.log.err('Wrong response from upstream resource url: ', req_uri, ' status:  ', res.status)
-    return {false, 'invalid response from upstream, sc: ' .. res.status}
+    return {false, create_error_response('can handle only responses with 200 sc', req_uri, res)}
   end
 
   local resource_body_parsed = read_json_body(res.body)
   if resource_body_parsed == nil then
     kong.log.err('Unable to parse response from ',  req_uri)
-    return { false, 'unable to parse resource body'}
+    return { false, create_error_response('unable to parse response', req_uri, res) }
   end
 
   local resource_body_query = jp.query(resource_body_parsed, api.data_path)
@@ -133,7 +160,7 @@ local function fetch(resource_key, resource_config, http_config)
   end
 
   kong.log.err('Invalid response from upstream resource ', resource_key, ' Multiple data data_len: ', resource_body_query)
-  return {false, 'something wrong'}
+  return {false, create_error_response('can handle response', req_uri, res)}
 end
 
 local function query_json(json_body, resource_path, resource_key)
