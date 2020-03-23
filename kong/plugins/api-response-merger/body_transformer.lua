@@ -32,7 +32,7 @@ local function create_error_response(message, req_uri, res)
     message  = message,
     status = 500,
     error = 'Resource fetch error',
-    code = 'API_Gateway_ERROR',
+    code = 'APIGatewayError',
   }
 
   if res.status then
@@ -77,8 +77,13 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
 
   for _, v in pairs(current) do
     local id = jp.query(v, des_resource_id_key)[1]
+    local src_data = by_id[id]
+    if src_data == nil then
+      return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. id .. '")'
+    end
     v[dest_resource_key] = by_id[id]
   end
+  return true, nil
 end
 
 -- This method "should" handle depth 2 and more - not tested
@@ -217,7 +222,10 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     -- if user passed query_param_name we assume that we should query for
     -- multiple resources
     if config.api.query_param_name ~= nil then
-      set_in_table_arr(resource_key, upstream_body, resource_body, config.api.id_key, config.resource_id_path)
+      local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config.api.id_key, config.resource_id_path)
+      if not ok then
+        return false, create_error_response(err, config.api.url, {status =  200, body = resource_body})
+      end
     else
       set_in_table(resource_key, upstream_body, resource_body)
     end

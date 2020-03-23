@@ -110,7 +110,24 @@ describe("Plugin: api-response-merger access", function()
               }
             }
 
-          }
+          },
+          {
+            path = '/array',
+            methods = {'GET'},
+            upstream_data_path = '$',
+            keys_to_extend = {
+              {
+                resource_id_path = '$..b.id',
+                resource_key = '$..b',
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
+                  query_param_name = 'ids',
+                  id_key = 'cfg'
+                }
+              }
+            }
+
+          },
         }
       }
     }
@@ -203,7 +220,7 @@ describe("Plugin: api-response-merger access", function()
     local json = cjson.decode(body)
     local expected = {
       message = 'can handle only responses with 200 sc',
-      code = 'API_Gateway_ERROR',
+      code = 'APIGatewayError',
       error = 'Resource fetch error',
       status = 500,
       errors = {{
@@ -252,7 +269,7 @@ describe("Plugin: api-response-merger access", function()
     local json = cjson.decode(body)
     local expected = {
       message = 'unable to parse response',
-      code = 'API_Gateway_ERROR',
+      code = 'APIGatewayError',
       error = 'Resource fetch error',
       status = 500,
       errors  = {{
@@ -261,6 +278,89 @@ describe("Plugin: api-response-merger access", function()
           uri = 'http://127.0.0.1:27777'
         }}
       }
+    assert.same(expected, json)
+  end)
+
+  it("should handle array response", function()
+    local array = {{
+      b = {
+        id = 'cfg-id',
+      },
+      foo = 'bar'
+    }, {
+      b = {
+        id = 'cfg-id-2',
+      },
+      foo = 'bar-sec'
+    }}
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_b = http_server_with_body(service_b_port, '[{ "cfg": "cfg-id", "something": "important"}, {"cfg":"cfg-id-2", "dog": "cat"}]')
+    helpers.wait_until(function()
+      return service_b:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/array", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+    local expected = {
+      { b = {
+          cfg = 'cfg-id',
+          something = 'important'
+        },
+      foo = 'bar',
+     }, {
+      b = {
+        cfg = 'cfg-id-2',
+        dog = 'cat'
+      },
+      foo = 'bar-sec'
+    }}
+    assert.same(expected, json)
+  end)
+
+  it("should handle missing data in array and return error", function()
+    local array = {{
+      b = {
+        id = 'cfg-id',
+      },
+      foo = 'bar'
+    }, {
+      b = {
+        id = 'not-found',
+      },
+      foo = 'bar-sec'
+    }}
+    local service_b_res = '[{ "cfg": "cfg-id", "something": "important"}, {"cfg":"cfg-id-2", "dog": "cat"}]'
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_b = http_server_with_body(service_b_port, service_b_res)
+    helpers.wait_until(function()
+      return service_b:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/array", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(500, res)
+    local json = cjson.decode(body)
+    local expected = {
+      message = 'missing data for key "b" (id missing cfg="not-found")',
+      code = 'APIGatewayError',
+      error = 'Resource fetch error',
+      status = 500,
+      errors = {{
+          error = cjson.decode(service_b_res),
+          status = 200,
+          uri = 'http://127.0.0.1:27777'
+        }}
+    }
     assert.same(expected, json)
   end)
 
