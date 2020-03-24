@@ -26,35 +26,26 @@ local function read_json_body(body)
   end
 end
 
-local function create_error_response(message, req_uri, res)
-  local errors = {}
+local function create_error_response(message, req_uri, status, body)
   local err_res = {
     message  = message,
     status = 500,
     error = 'Resource fetch error',
-    code = 'API_Gateway_ERROR',
+    code = 'APIGatewayError',
+    errors = {{
+      uri = req_uri,
+      status = status,
+      error = body
+    }}
   }
 
-  if res.status then
-    insert(errors, {
-      uri = req_uri,
-      status = res.status,
-      error = res.body
-    })
-  else
-    insert(errors, {
-      uri = req_uri,
-      status = 0,
-      error = res
-    })
-  end
-  err_res.errors = errors
   return err_res
 end
 
-function _M.is_json_body(content_type)
+local function is_json_body(content_type)
   return content_type and find(lower(content_type), 'application/json', nil, true)
 end
+_M.is_json_body = is_json_body
 
 -- FIXME:? this method will handle only depth 1
 local function set_in_table_arr(path, table, value, src_resource_name, des_resource_id_key)
@@ -77,8 +68,13 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
 
   for _, v in pairs(current) do
     local id = jp.query(v, des_resource_id_key)[1]
-    v[dest_resource_key] = by_id[id]
+    local src_data = by_id[id]
+    if src_data == nil then
+      return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. id .. '")'
+    end
+    v[dest_resource_key] = src_data
   end
+  return true, nil
 end
 
 -- This method "should" handle depth 2 and more - not tested
@@ -138,29 +134,33 @@ local function fetch(resource_key, resource_config, http_config)
   timer:stop()
   if not res then
     kong.log.err('Invalid response from upstream resource url: ', req_uri , ' err: ', err)
-    return {false, create_error_response('invalid response from resource', req_uri, err)}
+    return {nil, create_error_response('invalid response from resource', req_uri, 0, err)}
+  end
+
+  local resource_body_parsed = nil
+  if is_json_body(res.headers['content-type']) then
+    resource_body_parsed = read_json_body(res.body)
   end
 
   if res.status ~= 200 then
     kong.log.err('Wrong response from upstream resource url: ', req_uri, ' status:  ', res.status)
-    return {false, create_error_response('can handle only responses with 200 sc', req_uri, res)}
+    return {nil, create_error_response('can handle only responses with 200 sc', req_uri, res.status, resource_body_parsed or res.body)}
   end
 
-  local resource_body_parsed = read_json_body(res.body)
   if resource_body_parsed == nil then
     kong.log.err('Unable to parse response from ',  req_uri)
-    return { false, create_error_response('unable to parse response', req_uri, res) }
+    return { nil, create_error_response('unable to parse response', req_uri, res.status, res.body) }
   end
 
   local resource_body_query = jp.query(resource_body_parsed, api.data_path)
   if resource_body_query ~= nil and #resource_body_query == 1 then
     local resource_body = resource_body_query[1]
     setmetatable(resource_body, getmetatable(resource_body_parsed))
-    return {true, {resource_key, resource_body}}
+    return {{resource_key, resource_body}, nil}
   end
 
   kong.log.err('Invalid response from upstream resource ', resource_key, ' Multiple data data_len: ', resource_body_query)
-  return {false, create_error_response('can handle response', req_uri, res)}
+  return {nil, create_error_response('can handle response', req_uri, res.status, resource_body_parsed)}
 end
 
 local function query_json(json_body, resource_path, resource_key)
@@ -207,9 +207,9 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
       kong.log.err('Threads wait err: ', res)
       return false, res
     end
-    local status, result = unpack(res)
-    if not status then
-      return false, result
+    local result, err = unpack(res)
+    if not result then
+      return false, err
     end
     local resource_key, resource_body = unpack(result)
     local resource = resources[resource_key]
@@ -217,7 +217,10 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     -- if user passed query_param_name we assume that we should query for
     -- multiple resources
     if config.api.query_param_name ~= nil then
-      set_in_table_arr(resource_key, upstream_body, resource_body, config.api.id_key, config.resource_id_path)
+      local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config.api.id_key, config.resource_id_path)
+      if not ok then
+        return false, create_error_response(err, config.api.url, 200, resource_body)
+      end
     else
       set_in_table(resource_key, upstream_body, resource_body)
     end
