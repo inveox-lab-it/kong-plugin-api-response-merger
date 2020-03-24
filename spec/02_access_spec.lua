@@ -224,7 +224,7 @@ describe("Plugin: api-response-merger access", function()
       error = 'Resource fetch error',
       status = 500,
       errors = {{
-          error = '{ "cfg": "config-id", "something": "important"}',
+          error = { cfg = "config-id", something = "important"},
           status = 500,
           uri = 'http://127.0.0.1:27777'
         }}
