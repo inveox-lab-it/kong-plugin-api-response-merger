@@ -1,5 +1,5 @@
 package= "kong-plugin-api-response-merger"
-version = "1.2.0-1"
+version = "1.2.1-1"
 description = {
   summary = "Kong plugin for merging responses from microservices",
   homepage = "http://github.com/inveox-lab-it/kong-plugin-api-response-merger",
@@ -7,7 +7,7 @@ description = {
 }
 source = {
   url = "git://github.com/inveox-lab-it/kong-plugin-api-response-merger",
-  tag = "1.2.0"
+  tag = "1.2.1"
 }
 dependencies = {}
 supported_platforms = {
