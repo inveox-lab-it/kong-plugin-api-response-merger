@@ -109,8 +109,8 @@ function APIResponseMergerHandler.init_worker()
   monitoring.init()
 end
 
-APIResponseMergerHandler.PRIORITY = 1000
-APIResponseMergerHandler.VERSION = '1.0.0'
+APIResponseMergerHandler.PRIORITY = -100
+APIResponseMergerHandler.VERSION = '1.2.1'
 
 return APIResponseMergerHandler
 
