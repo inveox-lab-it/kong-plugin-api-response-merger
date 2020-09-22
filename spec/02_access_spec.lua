@@ -281,6 +281,31 @@ describe("Plugin: api-response-merger access", function()
     assert.same(expected, json)
   end)
 
+  it("should handle empty array respopnse", function()
+    local array = {{
+     b = {}
+    }}
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_b = http_server_with_body(service_b_port, '', '404 Not found')
+    helpers.wait_until(function()
+      return service_b:alive() and upstream:alive()
+    end, 1)
+    helpers.wait_until(function()
+      return upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/array", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+
+    assert.same(array, json)
+  end)
+
   it("should handle array response", function()
     local array = {{
       b = {
