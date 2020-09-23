@@ -49,6 +49,10 @@ _M.is_json_body = is_json_body
 
 -- FIXME:? this method will handle only depth 1
 local function set_in_table_arr(path, table, value, src_resource_name, des_resource_id_key)
+  if value == nil then
+    return true, nil
+  end
+
   path = sub(path, '\\$\\.\\.', '')
   path = sub(path, '\\$\\.', '')
   local paths = split(path, '.')
@@ -140,6 +144,11 @@ local function fetch(resource_key, resource_config, http_config)
   local resource_body_parsed = nil
   if is_json_body(res.headers['content-type']) then
     resource_body_parsed = read_json_body(res.body)
+  end
+
+  if res.status == 404 then
+    kong.log.err('404 response from upstream resource url: ', req_uri, ' status:  ', res.status)
+    return {{resource_key, nil}, nil}
   end
 
   if res.status ~= 200 then

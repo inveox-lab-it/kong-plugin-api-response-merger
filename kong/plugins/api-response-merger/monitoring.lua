@@ -1,8 +1,5 @@
 local url_parser = require 'socket.url'
--- FIXME: this should be changed after
--- https://github.com/Kong/kong-plugin-prometheus/pull/78 will be merged or
--- rejected
-local status, prom_expo = pcall(require, 'kong.plugins.prometheus-inveox.exporter')
+local status, prom_expo = pcall(require, 'kong.plugins.prometheus.exporter')
 
 local metrics = nil
 local function init()
