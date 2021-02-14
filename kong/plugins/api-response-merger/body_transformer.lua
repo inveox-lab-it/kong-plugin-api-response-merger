@@ -20,6 +20,19 @@ cjson.decode_array_with_array_mt(true)
 
 local _M = {}
 
+local function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 local function read_json_body(body)
   if body then
     return cjson.decode(body)
@@ -49,35 +62,48 @@ _M.is_json_body = is_json_body
 
 -- FIXME:? this method will handle only depth 1
 local function set_in_table_arr(path, table, value, src_resource_name, des_resource_id_key)
+  -- kong.log.warn('⚡️ path:', path, ', table:', dump(table), ', value:', value, ', src_resource_name:', src_resource_name, ', des_resource_id_key:', des_resource_id_key)
   if value == nil then
     return true, nil
   end
 
-  path = sub(path, '\\$\\.\\.', '')
-  path = sub(path, '\\$\\.', '')
-  local paths = split(path, '.')
-  local paths_len = #paths
+  local dest_resource_paths = jp.paths(table, path)
+  local parsed_dest_resource_id_key = jp.parse(des_resource_id_key)
+  local external_resource_id_key = parsed_dest_resource_id_key[#parsed_dest_resource_id_key]
+  -- print('external_resource_id_key:' .. external_resource_id_key)
 
-  local current = table
   local by_id = {}
-  local dest_resource_key = path
-  if paths_len > 0 then
-    dest_resource_key = paths[1]
-  end
 
   for _, v in pairs(value) do
     local id = v[src_resource_name]
     by_id[id] = v
   end
 
-  for _, v in pairs(current) do
-    local id = jp.query(v, des_resource_id_key)[1]
-    local src_data = by_id[id]
-    if src_data == nil then
-      return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. id .. '")'
+  for i, dest_resource_path in pairs(dest_resource_paths) do
+    -- print(i .. ' ' .. dump(dest_resource_path))
+    local _dest_resource = table
+    local _external_table = _dest_resource
+    local _external_key_to_dest_resource = nil
+    for j, key_to_dest_resource in pairs(dest_resource_path) do
+      if key_to_dest_resource == '$' then
+        -- just skip
+      else
+        -- print('key_to_dest_resource: ' .. key_to_dest_resource .. ', _dest_resource:' .. dump(_dest_resource))
+        if type(key_to_dest_resource) == 'number' then key_to_dest_resource = key_to_dest_resource + 1 end
+        if j == #dest_resource_path then _external_table = _dest_resource end
+        _dest_resource = _dest_resource[key_to_dest_resource]
+        _external_key_to_dest_resource = key_to_dest_resource
+      end
     end
-    v[dest_resource_key] = src_data
-  end
+    -- print('_dest_resource: ' .. dump(_dest_resource))
+    -- print('_external_table: ' .. dump(_external_table))
+    -- print('external_resource_id_key: ' .. dump(external_resource_id_key))
+    local _id = _external_table[external_resource_id_key]
+    -- print('_external_key_to_dest_resource: '.. _external_key_to_dest_resource)
+    -- print('_id: '.._id)
+    _external_table[_external_key_to_dest_resource] = by_id[_id] 
+  end 
+
   return true, nil
 end
 
