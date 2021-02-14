@@ -199,8 +199,15 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
       return false, res
     end
     local ids, resource_key = unpack(res)
+    -- if no resource_id_path found, skip the resource_key
+    if next(ids) == nil then
+      kong.log.warn('No resource_id_path found skip: ', resource_key)
+      resources[resource_key] = nil
+      goto continue
+    end
     resources[resource_key].ids = ids
     resources[resource_key].ids_len = #ids
+    ::continue::
   end
 
   -- prepare threads to call resources for data
