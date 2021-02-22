@@ -60,16 +60,16 @@ local function is_json_body(content_type)
 end
 _M.is_json_body = is_json_body
 
--- FIXME:? this method will handle only depth 1
-local function set_in_table_arr(path, table, value, src_resource_name, des_resource_id_key)
-  -- kong.log.warn('⚡️ path:', path, ', table:', dump(table), ', value:', value, ', src_resource_name:', src_resource_name, ', des_resource_id_key:', des_resource_id_key)
+-- This method can handle depth 2 and mode
+local function set_in_table_arr(path, upstream_body, value, src_resource_name, resource_id_path)
+  -- kong.log.warn('🍣 path:', path, ', upstream_body:', dump(upstream_body), ', value:', dump(value), ', src_resource_name:', src_resource_name, ', resource_id_path:', resource_id_path)
   if value == nil then
     return true, nil
   end
 
-  local dest_resource_paths = jp.paths(table, path)
-  local parsed_dest_resource_id_key = jp.parse(des_resource_id_key)
-  local external_resource_id_key = parsed_dest_resource_id_key[#parsed_dest_resource_id_key]
+  local dest_resource_paths = jp.paths(upstream_body, path)
+  local parsed_resource_id_path = jp.parse(resource_id_path)
+  local external_resource_id_key = parsed_resource_id_path[#parsed_resource_id_path]
   -- print('external_resource_id_key:' .. external_resource_id_key)
 
   local by_id = {}
@@ -81,8 +81,8 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
 
   for i, dest_resource_path in pairs(dest_resource_paths) do
     -- print(i .. ' ' .. dump(dest_resource_path))
-    local _dest_resource = table
-    local _external_table = _dest_resource
+    local _dest_resource = upstream_body
+    local _parent_of_dest_resource = _dest_resource
     local _external_key_to_dest_resource = nil
     for j, key_to_dest_resource in pairs(dest_resource_path) do
       if key_to_dest_resource == '$' then
@@ -90,44 +90,57 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
       else
         -- print('key_to_dest_resource: ' .. key_to_dest_resource .. ', _dest_resource:' .. dump(_dest_resource))
         if type(key_to_dest_resource) == 'number' then key_to_dest_resource = key_to_dest_resource + 1 end
-        if j == #dest_resource_path then _external_table = _dest_resource end
+        if j == #dest_resource_path then _parent_of_dest_resource = _dest_resource end
         _dest_resource = _dest_resource[key_to_dest_resource]
         _external_key_to_dest_resource = key_to_dest_resource
       end
     end
     -- print('_dest_resource: ' .. dump(_dest_resource))
-    -- print('_external_table: ' .. dump(_external_table))
+    -- print('_parent_of_dest_resource: ' .. dump(_parent_of_dest_resource))
     -- print('external_resource_id_key: ' .. dump(external_resource_id_key))
-    local _id = _external_table[external_resource_id_key]
+    local _id = _dest_resource[external_resource_id_key]
     -- print('_external_key_to_dest_resource: '.. _external_key_to_dest_resource)
     -- print('_id: '.._id)
-    _external_table[_external_key_to_dest_resource] = by_id[_id] 
+    _parent_of_dest_resource[_external_key_to_dest_resource] = by_id[_id] 
   end 
 
   return true, nil
 end
 
--- This method "should" handle depth 2 and more - not tested
-local function set_in_table(path, table, value)
-  path = sub(path, '\\$\\.', '')
-  local paths = split(path, '.')
-  local paths_len = #paths
-  if paths_len == 0 then
-    table = value
-    return table
+-- This method can handle depth 2 and more
+local function set_in_table(path, upstream_body, value, resource_id_path)
+  -- kong.log.warn('🍺 path:', path, ', upstream_body:', dump(upstream_body), ', value:', dump(value), ', resource_id_path:', resource_id_path)
+  if value == nil then
+    return
   end
 
-  if paths_len == 1 then
-    table[path] = value
-    return table
-  end
+  local dest_resource_paths = jp.paths(upstream_body, path)
+  local parsed_resource_id_path = jp.parse(resource_id_path)
+  local external_resource_id_key = parsed_resource_id_path[#parsed_resource_id_path]
+  -- print('external_resource_id_key:' .. external_resource_id_key)
 
-  local current = table[paths[1]]
-  for i = 2, paths_len - 1 do
-    current = current[path[i]]
-  end
-  current[path] = value
-  return current
+  for i, dest_resource_path in pairs(dest_resource_paths) do
+    print(i .. ' ' .. dump(dest_resource_path))
+    local _dest_resource = upstream_body
+    local _parent_of_dest_resource = _dest_resource
+    local _external_key_to_dest_resource = nil
+    for j, key_to_dest_resource in pairs(dest_resource_path) do
+      if key_to_dest_resource == '$' then
+        -- just skip
+      else
+        -- print('key_to_dest_resource: ' .. key_to_dest_resource .. ', _dest_resource:' .. dump(_dest_resource))
+        if type(key_to_dest_resource) == 'number' then key_to_dest_resource = key_to_dest_resource + 1 end
+        if j == #dest_resource_path then _parent_of_dest_resource = _dest_resource end
+        _dest_resource = _dest_resource[key_to_dest_resource]
+        _external_key_to_dest_resource = key_to_dest_resource
+      end
+    end
+    -- print('_dest_resource: ' .. dump(_dest_resource))
+    -- print('_parent_of_dest_resource: ' .. dump(_parent_of_dest_resource))
+    -- print('external_resource_id_key: ' .. dump(external_resource_id_key))
+    -- print('_external_key_to_dest_resource: '.. _external_key_to_dest_resource)
+    _parent_of_dest_resource[_external_key_to_dest_resource] = value
+  end 
 end
 _M.set_in_table = set_in_table
 
@@ -203,6 +216,7 @@ local function query_json(json_body, resource_path, resource_key)
     return {{}, resource_key}
   end
   local ids = jp.query(json_body, resource_path)
+  -- print('ids: ' .. dump(ids))
   return {ids, resource_key}
 end
 
@@ -264,7 +278,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
     else
-      set_in_table(resource_key, upstream_body, resource_body)
+      set_in_table(resource_key, upstream_body, resource_body, config.resource_id_path)
     end
   end
 
