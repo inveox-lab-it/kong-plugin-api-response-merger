@@ -1,0 +1,12 @@
+@Library('inveox-pipeline')_
+
+semanticReleasePipeline (
+  templateName: 'java-release',
+  docker: [	
+    image: 'inveox.azurecr.io/pipeline-kong-plugin:1.1.2'
+  ],	
+  scripts: [	
+    install: 'echo none',
+    test: 'pongo run ./spec; pongo down'
+  ]
+)
