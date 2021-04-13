@@ -1,0 +1,3 @@
+*      @inveox-lab-it/devops
+helmfile* @inveox-lab-it/devops
+values/hydra.yaml.gotmpl @inveox-lab-it/backend

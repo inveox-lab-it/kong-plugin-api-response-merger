@@ -1,0 +1,12 @@
+
+@Library('inveox-pipeline')_
+
+genericCIPipeline (
+  inheritFrom: 'generic-with-docker',
+  docker: [
+    image: 'inveox.azurecr.io/pipeline-kong-plugin:1.1.2'
+  ],
+  install: 'echo none',
+  lint: 'pongo lint',
+  tests: 'pongo run ./spec; pongo down'
+)
