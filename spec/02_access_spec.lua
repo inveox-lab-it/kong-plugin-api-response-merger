@@ -50,6 +50,8 @@ describe("Plugin: api-response-merger access", function()
   local service_a_port = 16666
   local service_b
   local service_b_port = 27777
+  local service_c
+  local service_c_port = 27777
   local upstream
   local upstream_body =  { a = { id = 'resource_a_id'}, baz = "cux" }
 
@@ -127,6 +129,22 @@ describe("Plugin: api-response-merger access", function()
               }
             }
 
+          },
+          {
+            path = '/nestedkeyarray',
+            methods = {'GET'},
+            upstream_data_path = '$',
+            keys_to_extend = {
+              {
+                resource_id_path = '$..c.xid',
+                resource_key = '$..c',
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_c_port,
+                  query_param_name = 'ids',
+                  id_key = 'org.name'
+                }
+              }
+            }
           },
         }
       }
@@ -341,6 +359,53 @@ describe("Plugin: api-response-merger access", function()
      }, {
       b = {
         cfg = 'cfg-id-2',
+        dog = 'cat'
+      },
+      foo = 'bar-sec'
+    }}
+    assert.same(expected, json)
+  end)
+
+  it("should handle array response with nested key", function()
+    local array = {{
+      c = {
+        xid = 'cfg-id',
+      },
+      foo = 'bar'
+    }, {
+      c = {
+        xid = 'cfg-id-2',
+      },
+      foo = 'bar-sec'
+    }}
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_c = http_server_with_body(service_c_port, '[{ "org":{"name": "cfg-id"}, "something": "important"}, {"org":{"name":"cfg-id-2"}, "dog": "cat"}]')
+    helpers.wait_until(function()
+      return service_c:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/nestedkeyarray", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+
+    local expected = {
+      { c = {
+          org = {
+            name = 'cfg-id',
+          },
+        something = 'important'
+      },
+      foo = 'bar',
+    }, {
+      c = {
+        org = {
+          name = 'cfg-id-2',
+        },
         dog = 'cat'
       },
       foo = 'bar-sec'
