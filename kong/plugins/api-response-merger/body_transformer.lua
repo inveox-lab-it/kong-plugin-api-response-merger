@@ -15,6 +15,7 @@ local spawn = ngx.thread.spawn -- luacheck: ignore
 local wait = ngx.thread.wait -- luacheck: ignore
 local insert = table.insert
 local unpack = unpack or table.unpack --luacheck: ignore
+local table_remove = table.remove
 
 cjson.decode_array_with_array_mt(true)
 
@@ -40,6 +41,14 @@ local function create_error_response(message, req_uri, status, body)
   }
 
   return err_res
+end
+
+local function get_by_nested_value(array, nested_key)
+  if #nested_key >1 then
+    local head = table_remove(nested_key,1)
+    return get_by_nested_value(array[head],nested_key)
+  end
+  return array[nested_key[1]]
 end
 
 local function is_json_body(content_type)
@@ -79,14 +88,6 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
     v[dest_resource_key] = src_data
   end
   return true, nil
-end
-
-function get_by_nested_value (array,nested_key)
-  if #nested_key >1 then
-    local head = table.remove(nested_key,1)
-    return get_by_nested_value(array[head],nested_key)
-  end
-  return array[nested_key[1]]
 end
 
 -- This method "should" handle depth 2 and more - not tested
