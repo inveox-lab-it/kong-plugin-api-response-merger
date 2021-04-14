@@ -138,9 +138,11 @@ local function fetch(resource_key, resource_config, http_config)
   local client = http.new()
   client:set_timeouts(http_config.connect_timeout, http_config.send_timeout, http_config.read_timeout)
   local timer = start_timer(req_uri)
+  local req_headers = kong.request.get_headers()
+  req_headers['user-agent'] = 'lua api-gateway/' .. req_headers['user-agent']
   local res, err = client:request_uri(req_uri, {
     query = req_query,
-    headers = kong.request.get_headers(),
+    headers = req_headers
   })
   -- put connection to pool / we don't close it
   client:set_keepalive(http_config.keepalive_timeout, http_config.keepalive_pool_size)
