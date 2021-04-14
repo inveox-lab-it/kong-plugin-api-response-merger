@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.3.0...1.4.0) (2021-04-14)
+
+
+### Features
+
+* add unique user-agent prefix for api-gateway requests ([37c68f8](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/37c68f8d73a81c72388b3995661eecf84093f111))
+
 # [1.3.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.2.2...1.3.0) (2021-04-14)
 
 

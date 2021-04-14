@@ -32,6 +32,7 @@ function APIResponseMergerHandler:access(conf)
   client:set_timeouts(http_config.connect_timeout, http_config.send_timeout, http_config.read_timeout)
   local req_headers = request.get_headers()
   req_headers['host'] = upstream.host_header
+  req_headers['user-agent'] = 'lua api-gateway/' .. req_headers['user-agent']
   local req_method = request.get_method()
   -- rewrite HEAD to GET to calcaulate correct content-length
   if req_method == 'HEAD' then
