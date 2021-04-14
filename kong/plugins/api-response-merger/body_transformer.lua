@@ -116,10 +116,15 @@ _M.set_in_table = set_in_table
 
 -- method used for calling services for given key
 local function fetch(resource_key, resource_config, http_config)
-  local req_query = '?'
   local config = resource_config.config
   local api = config.api
   local req_uri = api.url
+  local api_query = split(req_uri, '?')
+  local req_query = '?'
+  if #api_query == 2 then
+    req_query = '?' .. api_query[2] .. '&'
+  end
+
   local ids_len = resource_config.ids_len
   local query_param_name = api.query_param_name
   if query_param_name ~= nil then
