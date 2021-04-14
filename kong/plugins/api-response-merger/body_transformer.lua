@@ -15,6 +15,7 @@ local spawn = ngx.thread.spawn -- luacheck: ignore
 local wait = ngx.thread.wait -- luacheck: ignore
 local insert = table.insert
 local unpack = unpack or table.unpack --luacheck: ignore
+local table_remove = table.remove
 
 cjson.decode_array_with_array_mt(true)
 
@@ -42,6 +43,14 @@ local function create_error_response(message, req_uri, status, body)
   return err_res
 end
 
+local function get_by_nested_value(array, nested_key)
+  if #nested_key >1 then
+    local head = table_remove(nested_key,1)
+    return get_by_nested_value(array[head],nested_key)
+  end
+  return array[nested_key[1]]
+end
+
 local function is_json_body(content_type)
   return content_type and find(lower(content_type), 'application/json', nil, true)
 end
@@ -65,8 +74,8 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
     dest_resource_key = paths[1]
   end
 
-  for _, v in pairs(value) do
-    local id = v[src_resource_name]
+  for k, v in pairs(value) do
+    local id = get_by_nested_value(v,split(src_resource_name, '.'))
     by_id[id] = v
   end
 
