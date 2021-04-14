@@ -83,7 +83,7 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
     local id = jp.query(v, des_resource_id_key)[1]
     local src_data = by_id[id]
     if src_data == nil then
-      return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. id .. '")'
+      return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. (id or 'nil') .. '")'
     end
     v[dest_resource_key] = src_data
   end
