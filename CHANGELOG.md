@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.0...1.6.1) (2021-04-14)
+
+
+### Bug Fixes
+
+* handle id query returning nil ([3dbf436](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/3dbf4369991da0c77d0efa3a13f7eca1a32e4f23))
+
 # [1.6.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.5.1...1.6.0) (2021-04-14)
 
 
