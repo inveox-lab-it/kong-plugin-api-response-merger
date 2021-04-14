@@ -80,7 +80,7 @@ local function set_in_table_arr(path, upstream_body, value, src_resource_name, r
   end
 
   for i, dest_resource_path in pairs(dest_resource_paths) do
-    -- print(i .. ' ' .. dump(dest_resource_path))
+    -- print('🟠 dest_resource_path' .. i .. ' ' .. dump(dest_resource_path))
     local _dest_resource = upstream_body
     local _parent_of_dest_resource = _dest_resource
     local _external_key_to_dest_resource = nil
@@ -98,11 +98,13 @@ local function set_in_table_arr(path, upstream_body, value, src_resource_name, r
     -- print('_dest_resource: ' .. dump(_dest_resource))
     -- print('_parent_of_dest_resource: ' .. dump(_parent_of_dest_resource))
     -- print('external_resource_id_key: ' .. dump(external_resource_id_key))
-    local _id = _dest_resource[external_resource_id_key]
-    -- print('_external_key_to_dest_resource: '.. _external_key_to_dest_resource)
-    -- print('_id: '.._id)
-    _parent_of_dest_resource[_external_key_to_dest_resource] = by_id[_id] 
-  end 
+    if type(_dest_resource) == 'table' then
+      local _id = _dest_resource[external_resource_id_key]
+      -- print('_external_key_to_dest_resource: '.. _external_key_to_dest_resource)
+      -- print('_id: '.._id)
+      _parent_of_dest_resource[_external_key_to_dest_resource] = by_id[_id] 
+    end
+  end
 
   return true, nil
 end
