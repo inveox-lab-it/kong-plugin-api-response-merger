@@ -57,11 +57,13 @@ end
 _M.is_json_body = is_json_body
 
 -- FIXME:? this method will handle only depth 1
-local function set_in_table_arr(path, table, value, src_resource_name, des_resource_id_key)
+local function set_in_table_arr(path, table, value, config )
   if value == nil then
     return true, nil
   end
 
+  local src_resource_name = config.api.id_key
+  local des_resource_id_key = config.resource_id_path
   path = sub(path, '\\$\\.\\.', '')
   path = sub(path, '\\$\\.', '')
   local paths = split(path, '.')
@@ -82,10 +84,11 @@ local function set_in_table_arr(path, table, value, src_resource_name, des_resou
   for _, v in pairs(current) do
     local id = jp.query(v, des_resource_id_key)[1]
     local src_data = by_id[id]
-    if src_data == nil then
+    if src_data == nil and config.allow_missing ~= true  then
       return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. (id or 'nil') .. '")'
+    else
+      v[dest_resource_key] = src_data
     end
-    v[dest_resource_key] = src_data
   end
   return true, nil
 end
@@ -109,7 +112,10 @@ local function set_in_table(path, table, value)
   for i = 2, paths_len - 1 do
     current = current[path[i]]
   end
-  current[path] = value
+
+  if value ~= nil then
+    current[path] = value
+  end
   return current
 end
 _M.set_in_table = set_in_table
@@ -242,7 +248,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     -- if user passed query_param_name we assume that we should query for
     -- multiple resources
     if config.api.query_param_name ~= nil then
-      local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config.api.id_key, config.resource_id_path)
+      local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
       if not ok then
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end

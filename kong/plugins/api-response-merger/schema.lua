@@ -35,6 +35,10 @@ local keys_to_extend_type = {
         required = true,
         type = "string"
       }},
+      { allow_missing = {
+        required = false,
+        type = "boolean"
+      }},
       { api = api_type }
     }
   }
