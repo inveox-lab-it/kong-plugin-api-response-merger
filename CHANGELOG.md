@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.5.1...1.6.0) (2021-04-14)
+
+
+### Features
+
+* add flags which allows given key being missing ([34e15f3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/34e15f3b6137d59184c884326b0f17c10b4da9ad))
+
 ## [1.5.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.5.0...1.5.1) (2021-04-14)
 
 
