@@ -84,11 +84,10 @@ local function set_in_table_arr(path, table, value, config )
   for _, v in pairs(current) do
     local id_json_query, err = jp.query(v, des_resource_id_key)
     if err ~= nil and config.allow_missing ~= true  then
-      kong.log.err('missing data for key "', dest_resource_key ,' (id is nil; missing ', src_resource_name)
+      kong.log.err('missing data for key "', dest_resource_key ,' (id is nil; missing ', src_resource_name, 'err: ', err)
       return false, 'missing data for key "' .. dest_resource_key ..'" (id is nil; missing ' .. src_resource_name  .. '")'
     elseif err ~= nil then
-      kong.log.err('something went wrong dest_resource: ', dest_resource_key ,' src_resource_name: ', src_resource_name)
-      return false, 'something went wrong for ' .. dest_resource_key
+      return true, nil
     end
     local id = id_json_query[1]
     local src_data = by_id[id]
