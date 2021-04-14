@@ -82,7 +82,11 @@ local function set_in_table_arr(path, table, value, config )
   end
 
   for _, v in pairs(current) do
-    local id = jp.query(v, des_resource_id_key)[1]
+    local id_json_query = jp.query(v, des_resource_id_key)
+    if id_json_query == nil and config.allow_missing ~= true  then
+      return false, 'missing data for key "' .. dest_resource_key ..'" (id is nil; missing ' .. src_resource_name  .. '")'
+    end
+    local id = id_json_query[1]
     local src_data = by_id[id]
     if src_data == nil and config.allow_missing ~= true  then
       return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. (id or 'nil') .. '")'
