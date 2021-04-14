@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.1...1.6.2) (2021-04-14)
+
+
+### Bug Fixes
+
+* add more logs when data are missing ([cebe0c9](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/cebe0c9221720fb9e3be5f153b8f61393b61f2bd))
+
 ## [1.6.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.0...1.6.1) (2021-04-14)
 
 
