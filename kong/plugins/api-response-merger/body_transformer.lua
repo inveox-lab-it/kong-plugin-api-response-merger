@@ -86,8 +86,7 @@ local function set_in_table_arr(path, table, value, config )
     if err ~= nil and config.allow_missing ~= true  then
       kong.log.err('missing data for key "', dest_resource_key ,' (id is nil; missing ', src_resource_name)
       return false, 'missing data for key "' .. dest_resource_key ..'" (id is nil; missing ' .. src_resource_name  .. '")'
-    end
-    if err ~= nil then
+    else err ~= nil then
       kong.log.err('something went wrong dest_resource: ', dest_resource_key ,' src_resource_name: ', src_resource_name)
       return false, 'something went wrong for ' .. dest_resource_key
     end
