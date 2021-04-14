@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.5.0...1.5.1) (2021-04-14)
+
+
+### Bug Fixes
+
+* id can be nil ([158c2ac](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/158c2acb90d332b4625c26fd94133a337c64325c))
+
 # [1.5.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.4.0...1.5.0) (2021-04-14)
 
 
