@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.2...1.6.3) (2021-04-14)
+
+
+### Bug Fixes
+
+* handle json.path nil result ([c83497d](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/c83497de2482d8b6ffd3b747cdbb9b150463e91c))
+
 ## [1.6.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.1...1.6.2) (2021-04-14)
 
 
