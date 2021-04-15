@@ -1,3 +1,10 @@
+## [1.6.8](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.7...1.6.8) (2021-04-15)
+
+
+### Bug Fixes
+
+* change error message for single error ([6befbdd](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/6befbdd9c0613108497779e89007778580d8145a))
+
 ## [1.6.7](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.6...1.6.7) (2021-04-15)
 
 
