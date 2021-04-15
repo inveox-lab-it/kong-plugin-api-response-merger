@@ -264,6 +264,10 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
     else
+      if resource_body == nil and config.allow_missing == false then
+        kong.log.err('Missing data for resource ', resource_key, ' api: ', config.api.url, 'res_body: nil')
+        return false, create_error_response('missing data for resource_key: ' .. resource_key .. ' api: ' .. config.api.url .. ' body: nil', config.api.url, 404, resource_body)
+      end
       set_in_table(resource_key, upstream_body, resource_body)
     end
   end

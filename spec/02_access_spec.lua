@@ -131,6 +131,22 @@ describe("Plugin: api-response-merger access", function()
 
           },
           {
+            path = '/missing-single',
+            methods = {'GET'},
+            upstream_data_path = '$',
+            keys_to_extend = {
+              {
+                resource_id_path = '$.b.id',
+                resource_key = '$.b',
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
+                  id_key = 'cfg'
+                }
+              }
+            }
+
+          },
+          {
             path = '/nestedkeyarray',
             methods = {'GET'},
             upstream_data_path = '$',
@@ -492,6 +508,40 @@ describe("Plugin: api-response-merger access", function()
       errors = {{
           error = cjson.decode(service_b_res),
           status = 200,
+          uri = 'http://127.0.0.1:27777'
+        }}
+    }
+    assert.same(expected, json)
+  end)
+
+  it("should handle missing data(404) for single data and return error", function()
+    local data = {
+      b = {
+        id = 'not-found',
+      },
+      foo = 'bar-sec'
+    }
+    upstream = http_server_with_body(upstream_port, cjson.encode(data))
+    service_b = http_server_with_body(service_b_port, '', '404 Not found')
+    helpers.wait_until(function()
+      return service_b:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/missing-single", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(500, res)
+    local json = cjson.decode(body)
+    local expected = {
+      message = 'missing data for resource_key: $.b api: http://127.0.0.1:27777 body: nil',
+      code = 'APIGatewayError',
+      error = 'Resource fetch error',
+      status = 500,
+      errors = {{
+          status = 404,
           uri = 'http://127.0.0.1:27777'
         }}
     }
