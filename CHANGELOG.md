@@ -1,3 +1,10 @@
+## [1.6.5](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.4...1.6.5) (2021-04-14)
+
+
+### Bug Fixes
+
+* it should be if-else not if-if statment for jp.query nil result (is is late :() ([987492b](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/987492be257e4df9815f593da40bbb3cb5fb5cb1))
+
 ## [1.6.4](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.3...1.6.4) (2021-04-14)
 
 
