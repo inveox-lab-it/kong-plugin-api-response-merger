@@ -536,13 +536,14 @@ describe("Plugin: api-response-merger access", function()
     local body = assert.res_status(500, res)
     local json = cjson.decode(body)
     local expected = {
-      message = 'missing data for resource_key: $.b api: http://127.0.0.1:27777 body: nil',
+      message = 'can handle only responses with 200 sc',
       code = 'APIGatewayError',
       error = 'Resource fetch error',
       status = 500,
       errors = {{
           status = 404,
-          uri = 'http://127.0.0.1:27777'
+          uri = 'http://127.0.0.1:27777not-found',
+          error = ''
         }}
     }
     assert.same(expected, json)
