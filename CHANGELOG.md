@@ -1,3 +1,10 @@
+## [1.6.6](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.5...1.6.6) (2021-04-15)
+
+
+### Bug Fixes
+
+* set default for allow_missing ([22aa529](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/22aa529cacb69d59db735172a07a772095048010))
+
 ## [1.6.5](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.4...1.6.5) (2021-04-14)
 
 
