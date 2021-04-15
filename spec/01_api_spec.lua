@@ -51,6 +51,7 @@ describe('Plugin: api-response-merger API', function()
                 {
                   resource_id_path = '$.a.id',
                   resource_key = '$.a',
+                  allow_missing = true,
                   api = {
                     url = 'http://service-a/v1/a/',
                     id_key = 'a'

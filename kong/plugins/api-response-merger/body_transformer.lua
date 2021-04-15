@@ -44,9 +44,9 @@ local function create_error_response(message, req_uri, status, body)
 end
 
 local function get_by_nested_value(array, nested_key)
-  if #nested_key >1 then
+  if #nested_key > 1 then
     local head = table_remove(nested_key,1)
-    return get_by_nested_value(array[head],nested_key)
+    return get_by_nested_value(array[head], nested_key)
   end
   return array[nested_key[1]]
 end
@@ -76,27 +76,27 @@ local function set_in_table_arr(path, table, value, config )
     dest_resource_key = paths[1]
   end
 
-  for k, v in pairs(value) do
-    local id = get_by_nested_value(v,split(src_resource_name, '.'))
+  for _, v in pairs(value) do
+    local id = get_by_nested_value(v, split(src_resource_name, '.'))
     by_id[id] = v
   end
 
   for _, v in pairs(current) do
     local id_json_query, err = jp.query(v, des_resource_id_key)
-    if err ~= nil and config.allow_missing ~= true  then
+    if err ~= nil and config.allow_missing == true then
+      return true, nil
+    elseif err ~= nil and config.allow_missing == false then
       kong.log.err('missing data for key "', dest_resource_key ,' (id is nil; missing ', src_resource_name, 'err: ', err)
       return false, 'missing data for key "' .. dest_resource_key ..'" (id is nil; missing ' .. src_resource_name  .. '")'
-    elseif err ~= nil then
-      return true, nil
     end
     local id = id_json_query[1]
     local src_data = by_id[id]
-    if src_data == nil and config.allow_missing ~= true  then
+    if src_data == nil and config.allow_missing == false  then
       kong.log.err('missing data for key "', dest_resource_key ,' (id missing ', src_resource_name, ' for: ', id)
       return false, 'missing data for key "' .. dest_resource_key ..'" (id missing ' .. src_resource_name .. '="' .. (id or 'nil') .. '")'
-    else
-      v[dest_resource_key] = src_data
     end
+
+    v[dest_resource_key] = src_data
   end
   return true, nil
 end

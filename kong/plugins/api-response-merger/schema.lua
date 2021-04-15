@@ -37,7 +37,8 @@ local keys_to_extend_type = {
       }},
       { allow_missing = {
         required = false,
-        type = "boolean"
+        type = "boolean",
+        default = false
       }},
       { api = api_type }
     }
