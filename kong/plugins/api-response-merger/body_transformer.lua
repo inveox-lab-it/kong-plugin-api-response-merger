@@ -106,8 +106,8 @@ local function set_in_table(path, table, value, resource)
   path = sub(path, '\\$\\.', '')
   local paths = split(path, '.')
   local paths_len = #paths
-  local config = resource.config
-  if config.search_in_array and utils.is_array(value) then
+  if resource ~= nil and resource.config.search_in_array and utils.is_array(value) then
+    local config = resource.config
     if resource.ids_len == 1 then
       local src_resource_name = config.api.id_key
       local by_id = {}
