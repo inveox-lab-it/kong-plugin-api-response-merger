@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.8...1.7.0) (2021-04-26)
+
+
+### Features
+
+* handle search for array in for single upstream resource ([4e5a311](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/4e5a3111624aafe79550d9ccc9834e8f2cfb81be))
+
 ## [1.6.8](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.6.7...1.6.8) (2021-04-15)
 
 
