@@ -100,6 +100,23 @@ describe("Plugin: api-response-merger access", function()
 
           },
           {
+            path = '/single-array',
+            methods = {'POST'},
+            upstream_data_path = '$',
+            keys_to_extend = {
+              {
+                resource_id_path = '$.a.id',
+                resource_key = '$.a',
+                search_in_array = true,
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
+                  id_key = 'id'
+                }
+              }
+            }
+
+          },
+          {
             path = '/just-add',
             upstream_data_path = '$',
             methods = {'POST'},
@@ -223,6 +240,24 @@ describe("Plugin: api-response-merger access", function()
       return service_a:alive() and upstream:alive()
     end, 1)
     local res = proxy_client:post("/status/200", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+      body = upstream_body
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+    assert.same({ a = { id = 'resource_a_id', value = 'important'}, baz = "cux" }, json)
+  end)
+
+  it("should merge response from two services, resource as array #only", function()
+    service_a = http_server_with_body(service_a_port, '[{ "id": "resource_a_id", "value": "important"}]')
+    upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
+    helpers.wait_until(function()
+      return service_a:alive() and upstream:alive()
+    end, 1)
+    local res = proxy_client:post("/single-array", {
       headers = {
         host = "service.test",
         ["Content-Type"] = "application/json",

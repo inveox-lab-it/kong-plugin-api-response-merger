@@ -102,10 +102,31 @@ local function set_in_table_arr(path, table, value, config )
 end
 
 -- This method "should" handle depth 2 and more - not tested
-local function set_in_table(path, table, value)
+local function set_in_table(path, table, value, resource)
   path = sub(path, '\\$\\.', '')
   local paths = split(path, '.')
   local paths_len = #paths
+  local config = resource.config
+  if config.search_in_array and utils.is_array(value) then
+    if resource.ids_len == 1 then
+      local src_resource_name = config.api.id_key
+      local by_id = {}
+
+      for _, v in pairs(value) do
+        local id = get_by_nested_value(v, split(src_resource_name, '.'))
+        by_id[id] = v
+      end
+      local resource_val = by_id[resource.ids[1]]
+      if resource_val ~= nil then
+        value = resource_val
+      else
+        kong.log.warn('missing value for ', path, ' id ', config.ids[1])
+      end
+    elseif resource.ids_len > 1 then
+      kong.log.warn('something strang happend multiple resources to set in response ', path)
+    end
+  end
+
   if paths_len == 0 then
     table = value
     return table
@@ -256,19 +277,19 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     local resource_key, resource_body = unpack(result)
     local resource = resources[resource_key]
     local config = resource.config
-    -- if user passed query_param_name we assume that we should query for
+    -- if response is an array we should use set_in_table_arr
     -- multiple resources
-    if config.api.query_param_name ~= nil then
+    if utils.is_array(upstream_body, 'fast') then
       local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
       if not ok then
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
     else
       if resource_body == nil and config.allow_missing == false then
-        kong.log.err('Missing data for resource ', resource_key, ' api: ', config.api.url, 'res_body: nil')
+        kong.log.err('Missing data for resource ', resource_key, ' api: ', config.api.url, ' res_body: nil')
         return false, err
       end
-      set_in_table(resource_key, upstream_body, resource_body)
+      set_in_table(resource_key, upstream_body, resource_body, resource)
     end
   end
 

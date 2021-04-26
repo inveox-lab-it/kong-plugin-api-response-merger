@@ -55,7 +55,7 @@ metadata:
 plugin: api-response-merger
 ```
 
-## Use case 
+## Use case
 
 This paragraph will show how usage of this plugins looks like. We assume that there are 3 REST APIs which can be querd using below example
 
@@ -76,7 +76,7 @@ $ curl -X GET http://upstream/v1/data/upstream-1
 }
 ```
 
-Response from service-a 
+Response from service-a
 
 ```bash
 $ curl -X GET http://service-a/api/v1/data/data/a
@@ -88,7 +88,7 @@ $ curl -X GET http://service-a/api/v1/data/data/a
 }
 ```
 
-Response from service-b 
+Response from service-b
 ```bash
 $ curl -X GET http://service-b/api/v1/data/b
 {
@@ -170,18 +170,20 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `route_id`                                        |                     | The id of the Route which this plugin will target.
 | `enabled`                                         | `true`              | Whether this plugin will be applied.
 | `consumer_id`                                     |                     | The id of the Consumer which this plugin will target.
-| `config.upstream.uri`                             |                     | Base upstream uri 
-| `config.upstream.host_header`                     |                     | Host header which should be passed to upstream 
+| `config.upstream.uri`                             |                     | Base upstream uri
+| `config.upstream.host_header`                     |                     | Host header which should be passed to upstream
 | `config.upstream.path_prefix`                     |    ``               | Prefix for path to upstream
-| `config.paths`                                     |                     | List of paths on which plugin should merge response 
-| `config.paths[0].path`                             |                     | Regular expression for path 
-| `config.paths[0].upstream_data_path`               |  `$`                | JSON path for data to transform 
-| `config.paths[0].keys_to_extend`                   |                     | List of JSON keys to change 
-| `config.paths[0].keys_to_extend[0].resource_id_path`|                     | JSON path for id of resource in upstream respone 
-| `config.paths[0].keys_to_extend[0].resource_key`    |                     | JSON path for key where to put response of resource upstream 
-| `config.paths[0].keys_to_extend[0].api`             |                     | Object with config for resource upstream 
+| `config.paths`                                     |                     | List of paths on which plugin should merge response
+| `config.paths[0].path`                             |                     | Regular expression for path
+| `config.paths[0].upstream_data_path`               |  `$`                | JSON path for data to transform
+| `config.paths[0].keys_to_extend`                   |                     | List of JSON keys to change
+| `config.paths[0].keys_to_extend[0].resource_id_path`|                     | JSON path for id of resource in upstream respone
+| `config.paths[0].keys_to_extend[0].resource_key`    |                     | JSON path for key where to put response of resource upstream
+| `config.paths[0].keys_to_extend[0].api`             |                     | Object with config for resource upstream
 | `config.paths[0].keys_to_extend[0].api.url`         |                     | Adress for api from given resource can be retrived
-| `config.paths[0].keys_to_extend[0].api.data_path`   | `$`                 | JSON path for resource data 
-| `config.paths[0].keys_to_extend[0].api.query_param_name`   | nil               | Query string parameter name when accessing multiple resources 
+| `config.paths[0].keys_to_extend[0].api.data_path`   | `$`                 | JSON path for resource data
+| `config.paths[0].keys_to_extend[0].api.query_param_name`   | nil               | Query string parameter name when accessing multiple resources
+| `config.paths[0].keys_to_extend[0].allow_missing`   | false              | Flag indicating if merger should returns error when resource is missing. Default false
+| `config.paths[0].keys_to_extend[0].search_in_array`   | false              | Flag indicating if merger should search resource with given id
 
 
