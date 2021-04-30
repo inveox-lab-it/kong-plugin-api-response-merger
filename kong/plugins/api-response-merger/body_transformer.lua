@@ -78,6 +78,10 @@ local function set_in_table_arr(path, table, value, config )
 
   for _, v in pairs(value) do
     local id = get_by_nested_value(v, split(src_resource_name, '.'))
+    if id == nil then
+      kong.log.err('can not find id key ', src_resource_name, ' in response from ',  config.api.url)
+      return false, 'can not find id key  for "' .. src_resource_name  .. '" for ' .. config.api.url
+    end
     by_id[id] = v
   end
 
