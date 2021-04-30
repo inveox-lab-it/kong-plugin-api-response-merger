@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.7.1...1.7.2) (2021-04-30)
+
+
+### Bug Fixes
+
+* do not panic when id for resource is nil ([07933f9](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/07933f9c0337825e2a18f306ad6284688204cf2f))
+
 ## [1.7.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.7.0...1.7.1) (2021-04-26)
 
 
