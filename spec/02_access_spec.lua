@@ -164,6 +164,23 @@ describe("Plugin: api-response-merger access", function()
 
           },
           {
+            path = '/resource-id-optional',
+            methods = {'GET'},
+            upstream_data_path = '$',
+            keys_to_extend = {
+              {
+                resource_id_optional = true,
+                resource_id_path = '$.d.id',
+                resource_key = '$.d',
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
+                  id_key = 'org.name'
+                }
+              }
+            }
+
+          },
+          {
             path = '/nestedkeyarray',
             methods = {'GET'},
             upstream_data_path = '$',
@@ -507,6 +524,32 @@ describe("Plugin: api-response-merger access", function()
 
     assert.same(array, json)
   end)
+
+
+--
+  it("should allow resource id optional key if allowed by config", function()
+    local array = {
+      d = null,
+      foo = 'bar-sec'
+    }
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_c = http_server_with_body(service_c_port, '[{ "org":{"name": "cfg-id"}, "something": "important"}, {"org":{"name":"cfg-id-2"}, "dog": "cat"}]')
+    helpers.wait_until(function()
+      return service_c:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/resource-id-optional", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+
+    assert.same(array, json)
+  end)
+
 
   it("should handle missing data in array and return error", function()
     local array = {{
