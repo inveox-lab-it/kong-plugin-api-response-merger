@@ -177,6 +177,9 @@ local function fetch(resource_key, resource_config, http_config)
     req_uri = req_uri .. req_query
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
+  elseif config.resource_id_optional == true and ids_len == 0 then
+    kong.log.err('resource id missing - upstream not called')
+    return {{resource_key, nil}, create_error_response('resource id missing - upstream not called', '' , '', '')}
   end
 
   local client = http.new()
@@ -283,6 +286,11 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     local config = resource.config
     -- if response is an array we should use set_in_table_arr
     -- multiple resources
+
+    if resource_body == nil and config.resource_id_optional == true then
+      return true, upstream_body
+    end
+
     if utils.is_array(upstream_body, 'fast') then
       local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
       if not ok then

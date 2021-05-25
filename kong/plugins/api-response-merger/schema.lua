@@ -40,6 +40,11 @@ local keys_to_extend_type = {
         type = "boolean",
         default = false
       }},
+      { resource_id_optional = {
+        required = false,
+        type = "boolean",
+        default = false
+      }},
       { search_in_array = {
         required = false,
         type = "boolean",
