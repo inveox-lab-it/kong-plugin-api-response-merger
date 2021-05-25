@@ -288,7 +288,6 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     -- multiple resources
 
     if resource_body == nil and config.resource_id_optional == true then
-      kong.log.warn('Resource id is missing and it is allowed by config. return upstream body', resource_key, ' api: ', config.api.url, ' res_body: nil')
       return true, upstream_body
     end
 
