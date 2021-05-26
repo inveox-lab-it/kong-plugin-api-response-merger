@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.8.0...1.8.1) (2021-05-26)
+
+
+### Bug Fixes
+
+* **resource_id_optional:** [LIT03-585] BE: unable to retrieve DLO with null relatedLabId via api-gw ([76ab356](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/76ab356c43d1449dfcfeec1563b35a8fc586ae16))
+
 # [1.8.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.7.2...1.8.0) (2021-05-25)
 
 
