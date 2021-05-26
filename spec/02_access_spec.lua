@@ -571,6 +571,38 @@ describe("Plugin: api-response-merger access", function()
     assert.same(expected, json)
   end)
 
+  it("should return data on resource id optional", function()
+    local array = {
+      d = {  id = 'cfg-id' },
+      foo = 'bar-sec'
+    }
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_c = http_server_with_body(service_c_port, '{ "org":{"name": "cfg-id"}, "something": "important"}')
+    helpers.wait_until(function()
+      return service_c:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/resource-id-optional", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+
+    local expected = {
+       d = {
+        org = {
+          name = 'cfg-id',
+        },
+        something = 'important'
+      },
+        foo = 'bar-sec',
+      }
+    assert.same(expected, json)
+  end)
+
   it("should allow resource id optional key if allowed by config", function()
     local array = {
       d = nil,

@@ -288,10 +288,8 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     -- multiple resources
 
     if resource_body == nil and config.resource_id_optional == true then
-      return true, upstream_body
-    end
-
-    if utils.is_array(upstream_body, 'fast') then
+      kong.log.warn('resource id is missing. skip processing for resource_key=', resource_key)
+    elseif utils.is_array(upstream_body, 'fast') then
       local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
       if not ok then
         return false, create_error_response(err, config.api.url, 200, resource_body)
@@ -303,7 +301,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
       end
       set_in_table(resource_key, upstream_body, resource_body, resource)
     end
-  end
+end
 
   return true, upstream_body
 end
