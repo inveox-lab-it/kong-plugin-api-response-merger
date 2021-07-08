@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.8.1...1.9.0) (2021-07-08)
+
+
+### Features
+
+* rewrite method use req instead of table ([c756ecd](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/c756ecdc9b1a6a5907c8d4d8f79fc9c69109868e))
+
 ## [1.8.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.8.0...1.8.1) (2021-05-26)
 
 
