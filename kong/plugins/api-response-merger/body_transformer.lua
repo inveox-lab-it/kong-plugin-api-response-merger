@@ -195,7 +195,6 @@ local function fetch(resource_key, resource_config, http_config)
       end
     end
   end
-  end
   local res, err = client:request_uri(req_uri, {
     query = req_query,
     headers = req_headers
