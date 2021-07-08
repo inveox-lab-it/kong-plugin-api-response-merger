@@ -188,7 +188,13 @@ local function fetch(resource_key, resource_config, http_config)
   local timer = start_timer(req_uri)
   local req_headers = kong.request.get_headers()
   if common_plugin_status then
-    req_headers = common_plugin_headers.get_upstream_headers(kong.request)
+    local upstream_headers = common_plugin_headers.get_upstream_headers(kong.request)
+    for h, v in pairs(upstream_headers) do
+      if req_headers[h] == nil then
+        req_headers[h] = v
+      end
+    end
+  end
   end
   local res, err = client:request_uri(req_uri, {
     query = req_query,
