@@ -1,6 +1,7 @@
 local body_transformer = require 'kong.plugins.api-response-merger.body_transformer'
 local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
+local common_plugin_status, common_plugin_headers = pcall(require, 'kong.plugins.common.headers')
 local cjson = require('cjson.safe').new()
 cjson.decode_array_with_array_mt(true)
 local start_timer = monitoring.start_timer
@@ -32,7 +33,14 @@ function APIResponseMergerHandler:access(conf)
   client:set_timeouts(http_config.connect_timeout, http_config.send_timeout, http_config.read_timeout)
   local req_headers = request.get_headers()
   req_headers['host'] = upstream.host_header
-  req_headers['user-agent'] = 'lua api-gateway/' .. req_headers['user-agent']
+  if common_plugin_status then
+    local upstream_headers = common_plugin_headers.get_upstream_headers(request)
+    for h, v in pairs(upstream_headers) do
+      if req_headers[h] == nil then
+        req_headers[h] = v
+      end
+    end
+  end
   local req_method = request.get_method()
   -- rewrite HEAD to GET to calcaulate correct content-length
   if req_method == 'HEAD' then

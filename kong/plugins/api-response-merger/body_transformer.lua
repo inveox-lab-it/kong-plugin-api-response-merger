@@ -3,6 +3,7 @@ local utils = require 'kong.tools.utils'
 local http = require 'resty.http'
 local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
+local common_plugin_status, common_plugin_headers = pcall(require, 'kong.plugins.common.headers')
 local start_timer = monitoring.start_timer
 
 local split = utils.split
@@ -186,7 +187,9 @@ local function fetch(resource_key, resource_config, http_config)
   client:set_timeouts(http_config.connect_timeout, http_config.send_timeout, http_config.read_timeout)
   local timer = start_timer(req_uri)
   local req_headers = kong.request.get_headers()
-  req_headers['user-agent'] = 'lua api-gateway/' .. req_headers['user-agent']
+  if common_plugin_status then
+    req_headers = common_plugin_headers.get_upstream_headers(kong.request)
+  end
   local res, err = client:request_uri(req_uri, {
     query = req_query,
     headers = req_headers
