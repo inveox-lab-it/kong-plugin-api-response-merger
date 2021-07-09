@@ -40,6 +40,7 @@ function APIResponseMergerHandler:access(conf)
         req_headers[h] = v
       end
     end
+    req_headers['user-agent'] = upstream_headers['user-agent']
   end
   local req_method = request.get_method()
   -- rewrite HEAD to GET to calcaulate correct content-length

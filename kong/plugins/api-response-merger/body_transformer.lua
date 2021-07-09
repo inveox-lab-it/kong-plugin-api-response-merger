@@ -194,6 +194,7 @@ local function fetch(resource_key, resource_config, http_config)
         req_headers[h] = v
       end
     end
+    req_headers['user-agent'] = upstream_headers['user-agent']
   end
   local res, err = client:request_uri(req_uri, {
     query = req_query,
