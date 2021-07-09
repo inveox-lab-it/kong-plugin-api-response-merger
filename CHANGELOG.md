@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.9.1...1.9.2) (2021-07-09)
+
+
+### Bug Fixes
+
+* fix api-gtw user-agent header ([b1917aa](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/b1917aa195b5baaf953b705f2416977389bc2fde))
+
 ## [1.9.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.9.0...1.9.1) (2021-07-08)
 
 
