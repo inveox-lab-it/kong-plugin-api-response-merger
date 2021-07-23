@@ -1,3 +1,11 @@
+## [1.9.3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.9.2...1.9.3) (2021-07-23)
+
+
+### Bug Fixes
+
+* more info in log ([7fd5443](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/7fd544330ee302b50bba2db669fc94cf50c136ec))
+* more info in log ([3cbfe8a](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/3cbfe8ad2c29ddcc9c469016f6fb584cd3e29bb1))
+
 ## [1.9.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.9.1...1.9.2) (2021-07-09)
 
 
