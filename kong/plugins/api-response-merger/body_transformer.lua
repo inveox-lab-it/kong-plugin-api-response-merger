@@ -179,8 +179,8 @@ local function fetch(resource_key, resource_config, http_config)
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
   elseif config.resource_id_optional == true and ids_len == 0 then
-    kong.log.err('resource id missing - upstream not called')
-    return {{resource_key, nil}, create_error_response('resource id missing - upstream not called', '' , '', '')}
+    kong.log.err('resource id missing upstream not called resource_key: ', resource_key )
+    return {{resource_key, nil}, create_error_response('resource id missing - upstream not called resource_key=' .. resource_key, req_uri , '', '')}
   end
 
   local client = http.new()
