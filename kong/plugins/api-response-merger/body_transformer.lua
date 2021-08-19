@@ -215,6 +215,8 @@ local function set_in_table(path, upstream_body, value, resource)
       current[path] = value
     end
   end
+
+
   return true, nil
 end
 _M.set_in_table = set_in_table
@@ -372,8 +374,8 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     if resource_body == nil and config.resource_id_optional == true then
       kong.log.warn('resource id is missing. skip processing for resource_key=', resource_key)
     elseif utils.is_array(upstream_body, 'fast') then
-      local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
-      if not ok then
+      local _, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
+      if err ~= nil then
         kong.log.err('Unable to set result: ', resource_key, ' err: ', err)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
@@ -382,8 +384,8 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
         kong.log.err('Missing data for resource ', resource_key, ' api: ', config.api.url, ' res_body: nil')
         return false, err
       end
-      local ok, err = set_in_table(resource_key, upstream_body, resource_body, resource)
-      if not ok then
+      local _, err = set_in_table(resource_key, upstream_body, resource_body, resource)
+      if err ~= nil then
         kong.log.err('Unable to set result: ', resource_key, ' err: ', err)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
