@@ -376,7 +376,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     elseif utils.is_array(upstream_body, 'fast') then
       local _, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
       if err ~= nil then
-        kong.log.err('Unable to set result: ', resource_key, ' err: ', err)
+        kong.log.err('Unable to set result in array: ', resource_key, ' err: ', err)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
     else
