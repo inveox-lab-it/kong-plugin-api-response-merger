@@ -165,7 +165,8 @@ local function set_in_table(path, upstream_body, value, resource)
     end
 
     -- result is an array and we want to get single ID to response
-    if resource.config.search_in_array and utils.is_array(value) then
+    --- XXX: resource can be nil
+    if resource ~= nil and resource.config.search_in_array and utils.is_array(value) then
       local config = resource.config
       if resource.ids_len == 1 then
         local src_resource_name = config.api.id_key
@@ -185,6 +186,7 @@ local function set_in_table(path, upstream_body, value, resource)
         kong.log.warn('something strang happend multiple resources to set in response ', path)
       end
     end
+
     _parent_of_dest_resource[_external_key_to_dest_resource] = value
   end
 
