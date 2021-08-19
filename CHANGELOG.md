@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.10.2...1.10.3) (2021-08-19)
+
+
+### Bug Fixes
+
+* check if error is not nil when returning error response ([7358269](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/7358269894bda3ff1f6009776b38026a6aa36839))
+
 ## [1.10.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.10.1...1.10.2) (2021-08-19)
 
 
