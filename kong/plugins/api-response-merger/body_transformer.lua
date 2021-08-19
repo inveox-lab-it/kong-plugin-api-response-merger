@@ -206,7 +206,9 @@ local function set_in_table(path, upstream_body, value, resource)
 
     local current = upstream_body[paths[1]]
     for i = 2, paths_len - 1 do
-      current = current[path[i]]
+      if current ~= nil and current[path[i]] ~= nil then
+        current = current[path[i]]
+      end
     end
 
     if value ~= nil then
@@ -237,7 +239,7 @@ local function fetch(resource_key, resource_config, http_config)
       req_query = req_query .. query_join .. query_param_name .. '=' .. ids[i]
       query_join = '&'
     end
-    req_query = req_query .. '&size=' .. ids_len
+    req_query = req_query .. '&size=' .. (ids_len + 1)
     req_uri = req_uri .. req_query
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
