@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.10.0...1.10.1) (2021-08-19)
+
+
+### Bug Fixes
+
+* set_in_table resource can be nil ([f0582f3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/f0582f3d21562bba6ea12e0e83d63fe23bf011c4))
+
 # [1.10.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.9.3...1.10.0) (2021-08-19)
 
 
