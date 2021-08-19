@@ -1,3 +1,17 @@
+# [1.10.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.9.3...1.10.0) (2021-08-19)
+
+
+### Bug Fixes
+
+* Handle {'dest_resource': null} case. just skip. ([fbde846](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/fbde846a649692f1d1057e7c5724e53a8060fee2))
+* handle no resource_id_path found case to avoid crash ([53cfaf1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/53cfaf13ee608b1f6eea2c3e5d170725ead7083b))
+
+
+### Features
+
+* replace size parameter with filter[limit] to adopt Loopback4 interface ([d8df249](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/d8df2496ef3db302439ad19904e6d1eebcb0791e))
+* support more than 2 depth for set_in_table_arr() ([e1f0b92](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/e1f0b923b84c40baa1c8bfa9664e5500e5574799))
+
 ## [1.9.3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.9.2...1.9.3) (2021-07-23)
 
 
