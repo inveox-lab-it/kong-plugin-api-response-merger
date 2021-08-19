@@ -65,7 +65,7 @@ function APIResponseMergerHandler:access(conf)
   end
 
   res.headers['Transfer-Encoding'] = nil
-  if res.status ~= 200 then
+  if res.status > 499 then
     kong.log.err('Invalid response from upstream  ', upstream.uri, ' sc: ', res.status)
     return response.exit(res.status, res.body, res.headers)
   end
