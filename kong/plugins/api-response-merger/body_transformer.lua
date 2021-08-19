@@ -22,7 +22,7 @@ cjson.decode_array_with_array_mt(true)
 
 local _M = {}
 
-local function dump(o)
+local function dump(o) --luacheck: ignore
    if type(o) == 'table' then
       local s = '{ '
       for k,v in pairs(o) do
@@ -70,17 +70,25 @@ local function is_json_body(content_type)
 end
 _M.is_json_body = is_json_body
 
--- This method can handle depth 2 and mode
-local function set_in_table_arr(path, upstream_body, value, src_resource_name, resource_id_path)
-  -- kong.log.warn('🍣 path:', path, ', upstream_body:', dump(upstream_body), ', value:', dump(value), ', src_resource_name:', src_resource_name, ', resource_id_path:', resource_id_path)
+-- This method can handle depth 2 and more
+local function set_in_table_arr(path, upstream_body, value, config)
   if value == nil then
     return true, nil
   end
 
-  local dest_resource_paths = jp.paths(upstream_body, path)
-  local parsed_resource_id_path = jp.parse(resource_id_path)
+  local src_resource_name = config.api.id_key
+  local dest_resource_paths, err = jp.paths(upstream_body, path)
+  if err ~= nil then
+    kong.log.error("unable to find paths ", path, " error ", err)
+    return false, err
+  end
+  local resource_id_path = config.resource_id_path
+  local parsed_resource_id_path, err = jp.parse(resource_id_path)
+  if err ~= nil then
+    kong.log.error("unable to parse ", resource_id_path, " error ", err)
+    return false, err
+  end
   local external_resource_id_key = parsed_resource_id_path[#parsed_resource_id_path]
-  -- print('external_resource_id_key:' .. external_resource_id_key)
 
   local by_id = {}
 
@@ -94,29 +102,32 @@ local function set_in_table_arr(path, upstream_body, value, src_resource_name, r
   end
 
   for i, dest_resource_path in pairs(dest_resource_paths) do
-    -- print('🟠 dest_resource_path' .. i .. ' ' .. dump(dest_resource_path))
     local _dest_resource = upstream_body
     local _parent_of_dest_resource = _dest_resource
     local _external_key_to_dest_resource = nil
     for j, key_to_dest_resource in pairs(dest_resource_path) do
-      if key_to_dest_resource == '$' then
+      if key_to_dest_resource == '$' then --luacheck: ignore
         -- just skip
       else
         -- print('key_to_dest_resource: ' .. key_to_dest_resource .. ', _dest_resource:' .. dump(_dest_resource))
-        if type(key_to_dest_resource) == 'number' then key_to_dest_resource = key_to_dest_resource + 1 end
-        if j == #dest_resource_path then _parent_of_dest_resource = _dest_resource end
+        if type(key_to_dest_resource) == 'number' then
+          key_to_dest_resource = key_to_dest_resource + 1
+        end
+        if j == #dest_resource_path then
+          _parent_of_dest_resource = _dest_resource
+        end
         _dest_resource = _dest_resource[key_to_dest_resource]
         _external_key_to_dest_resource = key_to_dest_resource
       end
     end
-    -- print('_dest_resource: ' .. dump(_dest_resource))
-    -- print('_parent_of_dest_resource: ' .. dump(_parent_of_dest_resource))
-    -- print('external_resource_id_key: ' .. dump(external_resource_id_key))
     if type(_dest_resource) == 'table' then
       local _id = _dest_resource[external_resource_id_key]
-      -- print('_external_key_to_dest_resource: '.. _external_key_to_dest_resource)
-      -- print('_id: '.._id)
-      _parent_of_dest_resource[_external_key_to_dest_resource] = by_id[_id]
+      local _resource_data = by_id[_id]
+      if  _resource_data  == nil and config.allow_missing == false  then
+        kong.log.err('missing data for key "', _external_key_to_dest_resource,' (id missing ', src_resource_name, ' for: ', _id)
+        return false, 'missing data for key "' .. _external_key_to_dest_resource ..'" (id missing ' .. src_resource_name .. '="' .. (_id or 'nil') .. '")'
+      end
+      _parent_of_dest_resource[_external_key_to_dest_resource] = _resource_data
     end
   end
 
@@ -124,23 +135,25 @@ local function set_in_table_arr(path, upstream_body, value, src_resource_name, r
 end
 
 -- This method can handle depth 2 and more
-local function set_in_table(path, upstream_body, value, resource_id_path)
-  -- kong.log.warn('🍺 path:', path, ', upstream_body:', dump(upstream_body), ', value:', dump(value), ', resource_id_path:', resource_id_path)
+local function set_in_table(path, upstream_body, value, resource)
   if value == nil then
-    return
+    return nil, nil
   end
 
-  local dest_resource_paths = jp.paths(upstream_body, path)
-  local parsed_resource_id_path = jp.parse(resource_id_path)
-  local external_resource_id_key = parsed_resource_id_path[#parsed_resource_id_path]
-  -- print('external_resource_id_key:' .. external_resource_id_key)
+  local dest_resource_paths, err = jp.paths(upstream_body, path)
+  if err ~= nil then
+    return false, err
+  end
+  --- if we are using json.path to set result
+  local json_path_set = false
 
   for i, dest_resource_path in pairs(dest_resource_paths) do
+    json_path_set = true
     local _dest_resource = upstream_body
     local _parent_of_dest_resource = _dest_resource
     local _external_key_to_dest_resource = nil
     for j, key_to_dest_resource in pairs(dest_resource_path) do
-      if key_to_dest_resource == '$' then
+      if key_to_dest_resource == '$' then --luacheck: ignore
         -- just skip
       else
         -- print('key_to_dest_resource: ' .. key_to_dest_resource .. ', _dest_resource:' .. dump(_dest_resource))
@@ -150,12 +163,55 @@ local function set_in_table(path, upstream_body, value, resource_id_path)
         _external_key_to_dest_resource = key_to_dest_resource
       end
     end
-    -- print('_dest_resource: ' .. dump(_dest_resource))
-    -- print('_parent_of_dest_resource: ' .. dump(_parent_of_dest_resource))
-    -- print('external_resource_id_key: ' .. dump(external_resource_id_key))
-    -- print('_external_key_to_dest_resource: '.. _external_key_to_dest_resource)
+
+    -- result is an array and we want to get single ID to response
+    if resource.config.search_in_array and utils.is_array(value) then
+      local config = resource.config
+      if resource.ids_len == 1 then
+        local src_resource_name = config.api.id_key
+        local by_id = {}
+
+        for _, v in pairs(value) do
+          local id = get_by_nested_value(v, split(src_resource_name, '.'))
+          by_id[id] = v
+        end
+        local resource_val = by_id[resource.ids[1]]
+        if resource_val ~= nil then
+          value = resource_val
+        else
+          kong.log.warn('missing value for ', path, ' id ', config.ids[1])
+        end
+      elseif resource.ids_len > 1 then
+        kong.log.warn('something strang happend multiple resources to set in response ', path)
+      end
+    end
     _parent_of_dest_resource[_external_key_to_dest_resource] = value
   end
+
+  if json_path_set == false then
+    path = sub(path, '\\$\\.', '')
+    local paths = split(path, '.')
+    local paths_len = #paths
+    if paths_len == 0 then
+      upstream_body = value --luacheck: ignore
+      return true, nil
+    end
+
+    if paths_len == 1 then
+      upstream_body[path] = value
+      return true, nil
+    end
+
+    local current = upstream_body[paths[1]]
+    for i = 2, paths_len - 1 do
+      current = current[path[i]]
+    end
+
+    if value ~= nil then
+      current[path] = value
+    end
+  end
+  return true, nil
 end
 _M.set_in_table = set_in_table
 
@@ -179,7 +235,7 @@ local function fetch(resource_key, resource_config, http_config)
       req_query = req_query .. query_join .. query_param_name .. '=' .. ids[i]
       query_join = '&'
     end
-    req_query = req_query .. '&filter[limit]=' .. ids_len
+    req_query = req_query .. '&size=' .. ids_len
     req_uri = req_uri .. req_query
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
@@ -275,7 +331,8 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     end
     local ids, resource_key = unpack(res)
     -- if no resource_id_path found, skip the resource_key
-    if next(ids) == nil then
+    local config = resources[resource_key].config
+    if next(ids) == nil and config.allow_missing == true then
       kong.log.warn('No resource_id_path found skip: ', resource_key)
       resources[resource_key] = nil
       goto continue
@@ -313,6 +370,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     elseif utils.is_array(upstream_body, 'fast') then
       local ok, err = set_in_table_arr(resource_key, upstream_body, resource_body, config)
       if not ok then
+        kong.log.err('Unable to set result: ', resource_key, ' err: ', err)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
     else
@@ -320,7 +378,11 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
         kong.log.err('Missing data for resource ', resource_key, ' api: ', config.api.url, ' res_body: nil')
         return false, err
       end
-      set_in_table(resource_key, upstream_body, resource_body, resource)
+      local ok, err = set_in_table(resource_key, upstream_body, resource_body, resource)
+      if not ok then
+        kong.log.err('Unable to set result: ', resource_key, ' err: ', err)
+        return false, create_error_response(err, config.api.url, 200, resource_body)
+      end
     end
 end
 
