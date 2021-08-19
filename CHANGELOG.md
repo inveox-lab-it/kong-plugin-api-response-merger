@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.10.3...1.11.0) (2021-08-19)
+
+
+### Features
+
+* reject only server errors ([6fc5e81](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/6fc5e8141a4d0c4aa135f33406e62a50d66eb664))
+
 ## [1.10.3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.10.2...1.10.3) (2021-08-19)
 
 
