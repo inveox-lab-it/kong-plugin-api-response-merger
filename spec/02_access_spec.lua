@@ -273,7 +273,7 @@ describe("Plugin: api-response-merger access", function()
     assert.same({ a = { id = 'resource_a_id', value = 'important'}, baz = "cux" }, json)
   end)
 
-  it("should merge response from two services, resource as array #only", function()
+  it("should merge response from two services, resource as array", function()
     service_a = http_server_with_body(service_a_port, '[{ "id": "resource_a_id", "value": "important"}]')
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
     helpers.wait_until(function()
@@ -291,7 +291,7 @@ describe("Plugin: api-response-merger access", function()
     assert.same({ a = { id = 'resource_a_id', value = 'important'}, baz = "cux" }, json)
   end)
 
-  it("should merge response from two services - no id", function()
+  it("should merge response from two services - no id #only", function()
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
     service_b = http_server_with_body(service_b_port, '{ "cfg": "config-id", "something": "important"}')
     helpers.wait_until(function()
@@ -530,7 +530,7 @@ describe("Plugin: api-response-merger access", function()
     assert.same(array, json)
   end)
 
-  it("should handle missing data in array and return error", function()
+  it("should handle missing data in array and return error #only", function()
     local array = {{
       b = {
         id = 'cfg-id',
