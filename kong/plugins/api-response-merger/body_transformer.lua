@@ -22,8 +22,7 @@ cjson.decode_array_with_array_mt(true)
 
 local _M = {}
 
-local function dump(o)
-  --luacheck: ignore
+local function dump(o) --luacheck: ignore
   if type(o) == 'table' then
     local s = '{ '
     for k, v in pairs(o) do
@@ -140,8 +139,7 @@ local function set_for_path(path, upstream_body, value, resource)
     local _parent_of_dest_resource = _dest_resource
     local _external_key_to_dest_resource = nil
     for j, key_to_dest_resource in pairs(dest_resource_path) do
-      if key_to_dest_resource == '$' then
-        --luacheck: ignore
+      if key_to_dest_resource == '$' then --luacheck: ignore
         -- just skip
       else
         -- print('key_to_dest_resource: ' .. key_to_dest_resource .. ', _dest_resource:' .. dump(_dest_resource))
