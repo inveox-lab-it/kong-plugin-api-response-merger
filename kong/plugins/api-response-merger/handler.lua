@@ -101,10 +101,11 @@ function APIResponseMergerHandler:access(conf)
       return response.exit(500, result)
     end
 
+
     if data_path == '$' then
       data = result
     else
-      body_transformer.set_in_table(data_path, data, result)
+      body_transformer.set_for_path(data_path, data, result)
     end
 
     local data_json = cjson.encode(data)
