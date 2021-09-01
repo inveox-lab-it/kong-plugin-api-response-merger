@@ -350,7 +350,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     end
     resources[resource_key].ids = ids
     resources[resource_key].ids_len = #ids
-    :: continue ::
+    ::continue::
   end
 
   -- prepare threads to call resources for data
