@@ -107,7 +107,6 @@ describe("Plugin: api-response-merger access", function()
               {
                 resource_id_path = '$.a.id',
                 resource_key = '$.a',
-                search_in_array = true,
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
                   id_key = 'id'
@@ -192,6 +191,30 @@ describe("Plugin: api-response-merger access", function()
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_c_port,
                   query_param_name = 'ids',
                   id_key = 'org.name'
+                }
+              }
+            }
+          },
+          {
+            path = '/array-in-object',
+            methods = {'POST'},
+            upstream_data_path= "$", -- intentinally like this
+            keys_to_extend = {
+              {
+                resource_id_path = '$..f.id',
+                resource_key = '$..f',
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
+                  id_key = 'id',
+                  query_param_name = 'ids'
+                }
+              },
+              {
+                resource_id_path = '$.a.id',
+                resource_key = '$.a',
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
+                  id_key = 'id'
                 }
               }
             }
@@ -678,6 +701,36 @@ describe("Plugin: api-response-merger access", function()
     local body = assert.res_status(200, res)
     assert.same(body,  ups_body)
   end)
+  it("should merge response from two services, resource as nested array in object", function()
+    local upstream_local_body =  { arr = {{f={id="a1"}}, {f={id="a2"}}}, c = "important",a = { id = 'resource_a_id'}, }
+    upstream = http_server_with_body(upstream_port, cjson.encode(upstream_local_body))
 
+    service_a = http_server_with_body(service_a_port, '[{ "id": "a1", "v": "one" }, { "id": "a2", "v": "two" } ]')
+    service_b = http_server_with_body(service_b_port, '{ "id": "resource_a_id", "value": "important"}')
+
+    helpers.wait_until(function()
+      return service_a:alive() and upstream:alive() and service_b:alive()
+    end, 1)
+    local res = proxy_client:post("/array-in-object", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+      body = upstream_local_body
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+    assert.same(
+            {
+              arr = {
+                { f = { id = "a1", v = "one" } },
+                { f = { id = "a2", v = "two" } }
+              },
+              c = "important",
+              a = { id = 'resource_a_id', value = "important" }
+            },
+            json
+    )
+  end)
 end)
 -- vim: filetype=lua:expandtab:shiftwidth=2:tabstop=4:softtabstop=2:textwidth=80
