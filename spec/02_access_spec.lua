@@ -107,7 +107,6 @@ describe("Plugin: api-response-merger access", function()
               {
                 resource_id_path = '$.a.id',
                 resource_key = '$.a',
-                search_in_array = true,
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
                   id_key = 'id'
