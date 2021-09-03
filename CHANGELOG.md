@@ -1,3 +1,13 @@
+# [1.12.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.11.0...1.12.0) (2021-09-03)
+
+
+### Features
+
+* **json_path:** [LIT03-973] ISSUE - lab notes - field "modifiedBy" is returned as a list through the api gateway ([219104b](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/219104ba5871abca794a48bd91507e0377bc8958))
+* **json_path:** [LIT03-973] ISSUE - lab notes - field "modifiedBy" is returned as a list through the api gateway ([a1b55cc](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/a1b55cc617908a2ab01223ba239af82ee9ad4303))
+* **json_path:** [LIT03-973] ISSUE - lab notes - field "modifiedBy" is returned as a list through the api gateway - rework ([b7b5e4e](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/b7b5e4e31cee0d16966fdf483dc3a492f5b3e425))
+* [LIT03-973] test reproducing issue ([18befed](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/18befed9cf02cc85eaf4780d90e60129e8a3497c))
+
 # [1.11.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.10.3...1.11.0) (2021-08-19)
 
 
