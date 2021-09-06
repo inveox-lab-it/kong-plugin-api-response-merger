@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.12.0...1.13.0) (2021-09-06)
+
+
+### Features
+
+* **json_path:** [LIT03-1115] Correct response merger for empty responses ([56e16d7](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/56e16d70bbeb79c2e930b7ff4419b942c396ea15))
+
 # [1.12.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.11.0...1.12.0) (2021-09-03)
 
 
