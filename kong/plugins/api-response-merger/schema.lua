@@ -40,7 +40,7 @@ local keys_to_extend_type = {
         type = "boolean",
         default = false
       }},
-      { resource_id_optional = {
+      { add_missing = {
         required = false,
         type = "boolean",
         default = false

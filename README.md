@@ -184,5 +184,6 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `config.paths[0].keys_to_extend[0].api.data_path`   | `$`                 | JSON path for resource data
 | `config.paths[0].keys_to_extend[0].api.query_param_name`   | nil               | Query string parameter name when accessing multiple resources
 | `config.paths[0].keys_to_extend[0].allow_missing`   | false              | Flag indicating if merger should returns error when resource is missing. Default false
+| `config.paths[0].keys_to_extend[0].add_missing`   | false              | Flag indicating if merger should try adding the whole upstream body under the path if the id is missing
 
 

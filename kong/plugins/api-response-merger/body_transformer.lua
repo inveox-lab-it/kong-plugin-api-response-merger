@@ -87,7 +87,12 @@ local function get_external_resources_by_id(value, resource)
         by_id[id] = v
       end
     else
-      by_id[get_by_nested_value(value, split(src_resource_name, '.'))] = value
+      local id = get_by_nested_value(value, split(src_resource_name, '.'))
+      if id == nil then
+        kong.log.err('can not find id key ', src_resource_name, ' in response from ', config.api.url)
+        return nil, 'can not find id key  for "' .. src_resource_name .. '" for ' .. config.api.url
+      end
+      by_id[id] = value
     end
   else
     by_id['$'] = value
@@ -250,9 +255,6 @@ local function fetch(resource_key, resource_config, http_config)
     req_uri = req_uri .. req_query
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
-  elseif config.resource_id_optional == true and ids_len == 0 then
-    kong.log.err('resource id missing upstream not called resource_key: ', resource_key, ' url: ', req_uri)
-    return { { resource_key, nil }, create_error_response('resource id missing - upstream not called resource_key=' .. resource_key, req_uri, '', '') }
   end
 
   local client = http.new()
@@ -343,7 +345,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     local ids, resource_key = unpack(res)
     -- if no resource_id_path found, skip the resource_key
     local config = resources[resource_key].config
-    if next(ids) == nil and config.allow_missing == true then
+    if next(ids) == nil and config.add_missing == false then
       kong.log.warn('No resource_id_path found skip: ', resource_key)
       resources[resource_key] = nil
       goto continue
@@ -376,9 +378,7 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     -- if response is an array we should use set_in_table_arr
     -- multiple resources
 
-    if resource_body == nil and config.resource_id_optional == true then
-      kong.log.warn('resource id is missing. skip processing for resource_key=', resource_key)
-    elseif utils.is_array(upstream_body, 'fast') then
+    if utils.is_array(upstream_body, 'fast') then
       local _, err = set_paths(resource_key, upstream_body, resource_body, resource)
       if err ~= nil then
         kong.log.err('Unable to set result in array: ', resource_key, ' err: ', err)
