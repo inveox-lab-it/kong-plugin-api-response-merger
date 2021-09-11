@@ -74,21 +74,20 @@ function APIResponseMergerHandler:access(conf)
     return response.exit(res.status, res.body, res.headers)
   end
 
-  local keys_to_extend = nil
+  local resources_to_extend = nil
   local data_path = '$'
   local paths = conf.paths
   for i = 1, #paths do
     local path = paths[i]
     if match(req_path, path.path, 'io') then
         if contains(path.methods, req_method) then
-          keys_to_extend = path.keys_to_extend
+          resources_to_extend = path.resources_to_extend
           data_path = path.upstream_data_path
           break
         end
     end
   end
-
-  if keys_to_extend ~= nil and is_json_body(res.headers['content-type']) then
+  if resources_to_extend ~= nil and is_json_body(res.headers['content-type']) then
     local data = cjson.decode(res.body)
     local data_to_transform = jp.query(data, data_path)
 
@@ -96,7 +95,7 @@ function APIResponseMergerHandler:access(conf)
       kong.log.warn('No data to transform in path ', data_path)
       return response.exit(res.status, res.body, res.headers)
     end
-    local ok, result = body_transformer.transform_json_body(keys_to_extend, data_to_transform[1], http_config)
+    local ok, result = body_transformer.transform_json_body(resources_to_extend, data_to_transform[1], http_config)
     if not ok then
       return response.exit(500, result)
     end
@@ -105,7 +104,7 @@ function APIResponseMergerHandler:access(conf)
     if data_path == '$' then
       data = result
     else
-      body_transformer.set_for_path(data_path, data, result)
+      body_transformer.set_for_path({path = data_path} , data, result)
     end
 
     local data_json = cjson.encode(data)

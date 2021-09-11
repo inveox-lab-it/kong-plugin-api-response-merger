@@ -100,8 +100,8 @@ local function get_external_resources_by_id(value, resource)
   return by_id, nil
 end
 
-local function get_external_resource_id_key(resource)
-  local resource_id_path = resource.config.resource_id_path
+local function get_external_resource_id_key(data_path)
+  local resource_id_path = data_path.id_path
   if resource_id_path == nil then
     return nil, nil
   end
@@ -113,10 +113,10 @@ local function get_external_resource_id_key(resource)
   return parsed_resource_id_path[#parsed_resource_id_path], nil
 end
 
-local function get_external_id_and_resource_from_value(dest_resource, value, resource)
+local function get_external_id_and_resource_from_value(dest_resource, value, data_path, resource)
   if resource ~= nil then
-    if resource.resource_id_key ~= nil then
-      return dest_resource[resource.resource_id_key], value[dest_resource[resource.resource_id_key]]
+    if data_path.resource_id_key ~= nil then
+      return dest_resource[data_path.resource_id_key], value[dest_resource[data_path.resource_id_key]]
     else
       return '$', value['$']
     end
@@ -125,14 +125,15 @@ local function get_external_id_and_resource_from_value(dest_resource, value, res
   end
 end
 
-local function set_for_path(path, upstream_body, value, resource)
+local function set_for_path(data_path, upstream_body, value, resource)
   if value == nil then
     return nil, nil
   end
 
+  local path = data_path.path
   local dest_resource_paths, err = jp.paths(upstream_body, path)
   if err ~= nil then
-    kong.log.error("unable to find paths ", path, " error ", err)
+    kong.log.error("unable to find paths ", data_path.path, " error ", err)
     return false, err
   end
 
@@ -160,13 +161,13 @@ local function set_for_path(path, upstream_body, value, resource)
     end
 
     if type(_dest_resource) == 'table' then
-      local _id, _resource_data = get_external_id_and_resource_from_value(_dest_resource, value, resource)
+      local _id, _resource_data = get_external_id_and_resource_from_value(_dest_resource, value, data_path, resource)
       if _resource_data == nil then
         if resource == nil then
           kong.log.err('missing data for key "', _external_key_to_dest_resource)
           return false, 'missing data for key "' .. _external_key_to_dest_resource
         elseif resource.config.allow_missing == false then
-          kong.log.err('missing data for key "', _external_key_to_dest_resource, ' (id missing ', resource.config.api.id_key, ' for: ', _id)
+          kong.log.err('missing data for key "', _external_key_to_dest_resource, '" (id missing ', resource.config.api.id_key, ' for: ', _id)
           return false, 'missing data for key "' .. _external_key_to_dest_resource .. '" (id missing ' .. resource.config.api.id_key .. '="' .. (_id or 'nil') .. '")'
         end
       end
@@ -175,7 +176,7 @@ local function set_for_path(path, upstream_body, value, resource)
   end
 
   if json_path_set == false then
-    local _, _resource_data = get_external_id_and_resource_from_value(upstream_body, value, resource)
+    local _, _resource_data = get_external_id_and_resource_from_value(upstream_body, value, data_path, resource)
     path = sub(path, '\\$\\.', '')
     local paths = split(path, '.')
     local paths_len = #paths
@@ -205,7 +206,7 @@ local function set_for_path(path, upstream_body, value, resource)
 end
 _M.set_for_path = set_for_path
 
-local function set_paths(path, upstream_body, value, resource)
+local function set_paths(data_paths, upstream_body, value, resource)
   if value == nil then
     return nil, nil
   end
@@ -215,24 +216,26 @@ local function set_paths(path, upstream_body, value, resource)
     return false, err
   end
 
-  local external_resource_id_key, err = get_external_resource_id_key(resource)
-  if err ~= nil then
-    return false, err
-  end
-  if external_resource_id_key ~= nil then
-    resource.resource_id_key = external_resource_id_key
-  end
+  for i = 1, #data_paths do
+    local external_resource_id_key, err = get_external_resource_id_key(data_paths[i])
+    if err ~= nil then
+      return false, err
+    end
+    if external_resource_id_key ~= nil then
+      data_paths[i].resource_id_key = external_resource_id_key
+    end
 
-  local _, err = set_for_path(path, upstream_body, external_resources_by_id, resource)
-  if err ~= nil then
-    return false, err
+    local _, err = set_for_path(data_paths[i], upstream_body, external_resources_by_id, resource)
+    if err ~= nil then
+      return false, err
+    end
   end
 
   return true, nil
 end
 
 -- method used for calling services for given key
-local function fetch(resource_key, resource_config, http_config)
+local function fetch(resource_index, resource_config, http_config)
   local config = resource_config.config
   local api = config.api
   local req_uri = api.url
@@ -288,8 +291,8 @@ local function fetch(resource_key, resource_config, http_config)
   end
 
   if res.status == 404 then
-    kong.log.err('404 response from upstream resource url: ', req_uri, ' status: ', res.status, ' resource_key:', resource_key)
-    return { { resource_key, nil }, create_error_response('can handle only responses with 200 sc', req_uri, res.status, resource_body_parsed or res.body) }
+    kong.log.err('404 response from upstream resource url: ', req_uri, ' status: ', res.status, ' resource_index:', resource_index)
+    return { { resource_index, nil }, create_error_response('can handle only responses with 200 sc', req_uri, res.status, resource_body_parsed or res.body) }
   end
 
   if res.status ~= 200 then
@@ -306,34 +309,43 @@ local function fetch(resource_key, resource_config, http_config)
   if resource_body_query ~= nil and #resource_body_query == 1 then
     local resource_body = resource_body_query[1]
     setmetatable(resource_body, getmetatable(resource_body_parsed))
-    return { { resource_key, resource_body }, nil }
+    return { { resource_index, resource_body }, nil }
   end
 
-  kong.log.err('Invalid response from upstream resource ', resource_key, ' Multiple data data_len: ', resource_body_query)
+  kong.log.err('Invalid response from upstream resource ', resource_index, ' Multiple data data_len: ', resource_body_query)
   return { nil, create_error_response('can handle response', req_uri, res.status, resource_body_parsed) }
 end
 
-local function query_json(json_body, resource_path, resource_key)
-  if resource_path == nil then
-    return { {}, resource_key }
+local function query_json(json_body, resource_data_paths, resource_index)
+  if resource_data_paths == nil then
+    return { {}, resource_index }
   end
-  local ids, err = jp.query(json_body, resource_path)
-  if err ~= nil then
-    return { {}, resource_key }
+  local ids = {}
+  for i = 1, #resource_data_paths do
+    if resource_data_paths[i].id_path ~= nil then
+      local temp_ids, err = jp.query(json_body, resource_data_paths[i].id_path)
+      if err ~= nil then
+        return { {}, resource_index }
+      end
+      for j = 1, #temp_ids do
+        insert(ids, temp_ids[j])
+      end
+    end
   end
-  return { ids, resource_key }
+
+  return { ids, resource_index }
 end
 
-function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
+function _M.transform_json_body(resources_to_extend, upstream_body, http_config)
   local resources = {}
   local threads_json_query = {}
   -- prepare threads to find ids to query resources
-  for i = 1, #keys_to_extend do
-    local v = keys_to_extend[i]
-    resources[v.resource_key] = {
+  for i = 1, #resources_to_extend do
+    local v = resources_to_extend[i]
+    resources[i] = {
       config = v
     }
-    insert(threads_json_query, spawn(query_json, upstream_body, v.resource_id_path, v.resource_key))
+    insert(threads_json_query, spawn(query_json, upstream_body, v.data_paths, i))
   end
 
   for i = 1, #threads_json_query do
@@ -342,24 +354,23 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
       kong.log.err('Threads wait err: ', res)
       return false, res
     end
-    local ids, resource_key = unpack(res)
-    -- if no resource_id_path found, skip the resource_key
-    local config = resources[resource_key].config
+    local ids, resource_index = unpack(res)
+    -- if no resource ids found, skip the resource (if not adding allowed)
+    local config = resources[resource_index].config
     if next(ids) == nil and config.add_missing == false then
-      kong.log.warn('No resource_id_path found skip: ', resource_key)
-      resources[resource_key] = nil
-      goto continue
+      kong.log.warn('No resource ids found skip: ', resource_index)
+      resources[resource_index] = nil
+    else
+      resources[resource_index].ids = ids
+      resources[resource_index].ids_len = #ids
     end
-    resources[resource_key].ids = ids
-    resources[resource_key].ids_len = #ids
-    ::continue::
   end
 
   -- prepare threads to call resources for data
   local threads = {}
 
-  for resource_key, value in pairs(resources) do
-    insert(threads, spawn(fetch, resource_key, value, http_config))
+  for resource_index, value in pairs(resources) do
+    insert(threads, spawn(fetch, resource_index, value, http_config))
   end
 
   for i = 1, #threads do
@@ -372,26 +383,26 @@ function _M.transform_json_body(keys_to_extend, upstream_body, http_config)
     if not result then
       return false, err
     end
-    local resource_key, resource_body = unpack(result)
-    local resource = resources[resource_key]
+    local resource_index, resource_body = unpack(result)
+    local resource = resources[resource_index]
     local config = resource.config
     -- if response is an array we should use set_in_table_arr
     -- multiple resources
 
     if utils.is_array(upstream_body, 'fast') then
-      local _, err = set_paths(resource_key, upstream_body, resource_body, resource)
+      local _, err = set_paths(resource.config.data_paths, upstream_body, resource_body, resource)
       if err ~= nil then
-        kong.log.err('Unable to set result in array: ', resource_key, ' err: ', err)
+        kong.log.err('Unable to set result in array: ', resource_index, ' err: ', err)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
     else
       if resource_body == nil and config.allow_missing == false then
-        kong.log.err('Missing data for resource ', resource_key, ' api: ', config.api.url, ' res_body: nil')
+        kong.log.err('Missing data for resource ', resource_index, ' api: ', config.api.url, ' res_body: nil')
         return false, err
       end
-      local _, err = set_paths(resource_key, upstream_body, resource_body, resource)
+      local _, err = set_paths(resource.config.data_paths, upstream_body, resource_body, resource)
       if err ~= nil then
-        kong.log.err('Unable to set result: ', resource_key, ' err: ', err)
+        kong.log.err('Unable to set result: ', resource_index, ' err: ', err)
         return false, create_error_response(err, config.api.url, 200, resource_body)
       end
     end

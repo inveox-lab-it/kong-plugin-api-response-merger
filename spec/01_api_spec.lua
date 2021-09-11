@@ -47,10 +47,14 @@ describe('Plugin: api-response-merger API', function()
             {
               path = '/v1/resources/.+',
               methods = {'GET'},
-              keys_to_extend = {
+              resources_to_extend = {
                 {
-                  resource_id_path = '$.a.id',
-                  resource_key = '$.a',
+                  data_paths = {
+                    {
+                      path = '$.a',
+                      id_path = '$.a.id'
+                    }
+                  },
                   allow_missing = true,
                   api = {
                     url = 'http://service-a/v1/a/',
