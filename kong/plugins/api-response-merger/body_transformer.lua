@@ -195,7 +195,7 @@ local function set_for_path(data_path, upstream_body, value, resource)
 
     local current = upstream_body[paths[1]]
     for i = 2, paths_len - 1 do
-      if current ~= nil and current[path[i]] ~= nil then
+      if type(current) == 'table' and type(current[path[i]]) == 'table' then
         current = current[path[i]]
       end
     end
