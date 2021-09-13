@@ -390,7 +390,7 @@ function _M.transform_json_body(resources_to_extend, upstream_body, http_config)
     -- multiple resources
 
     if utils.is_array(upstream_body, 'fast') then
-      local _, err = set_paths(resource.config.data_paths, upstream_body, resource_body, resource)
+      local _, err = set_paths(config.data_paths, upstream_body, resource_body, resource)
       if err ~= nil then
         kong.log.err('Unable to set result in array: ', resource_index, ' err: ', err)
         return false, create_error_response(err, config.api.url, 200, resource_body)
