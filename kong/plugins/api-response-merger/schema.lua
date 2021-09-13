@@ -20,21 +20,33 @@ local api_type = {
   }
 }
 
-local keys_to_extend_type = {
+local data_paths_type = {
   required = false,
   type = "array",
   default = {},
   elements = {
     type = "record",
     fields = {
-      { resource_id_path = {
-        required = false,
-        type = "string"
-      }},
-      { resource_key = {
+      { path = {
         required = true,
         type = "string"
-      }},
+      } },
+      { id_path = {
+        required = false,
+        type = "string"
+      } }
+    }
+  }
+}
+
+local resources_to_extend_type = {
+  required = false,
+  type = "array",
+  default = {},
+  elements = {
+    type = "record",
+    fields = {
+      { data_paths = data_paths_type },
       { allow_missing = {
         required = false,
         type = "boolean",
@@ -99,7 +111,7 @@ return {
               { path = { type = "string", default = "/" }},
               { methods = http_methods_arr_type },
               { upstream_data_path = { type = "string", default = "$" }},
-              { keys_to_extend = keys_to_extend_type }
+              { resources_to_extend = resources_to_extend_type }
             }
           }
         }}

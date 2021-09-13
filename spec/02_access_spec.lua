@@ -87,57 +87,70 @@ describe("Plugin: api-response-merger access", function()
             path = '/status/.+',
             methods = {'POST'},
             upstream_data_path = '$',
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$.a.id',
-                resource_key = '$.a',
+                data_paths = {
+                  {
+                    id_path = '$.a.id',
+                    path = '$.a'
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
                   id_key = 'id'
                 }
               }
             }
-
           },
           {
             path = '/single-array',
             methods = {'POST'},
             upstream_data_path = '$',
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$.a.id',
-                resource_key = '$.a',
+                data_paths = {
+                  {
+                    id_path = '$.a.id',
+                    path = '$.a'
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
                   id_key = 'id'
                 }
               }
             }
-
           },
           {
             path = '/just-add',
             upstream_data_path = '$',
             methods = {'POST'},
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_key = '$.add',
+                data_paths = {
+                  {
+                    path = '$.add'
+                  }
+                },
                 add_missing = true,
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
                 }
               }
             }
-
           },
           {
             path = '/array',
             methods = {'GET'},
             upstream_data_path = '$',
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$..b.id',
-                resource_key = '$..b',
+                data_paths = {
+                  {
+                    id_path = '$..b.id',
+                    path = '$..b'
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
                   query_param_name = 'ids',
@@ -145,16 +158,43 @@ describe("Plugin: api-response-merger access", function()
                 }
               }
             }
-
+          },
+          {
+            path = '/multidatapaths',
+            methods = {'GET'},
+            upstream_data_path = '$',
+            resources_to_extend = {
+              {
+                data_paths = {
+                  {
+                    id_path = '$..b.id',
+                    path = '$..b'
+                  },
+                  {
+                    id_path = '$..d.id',
+                    path = '$..d'
+                  }
+                },
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
+                  query_param_name = 'ids',
+                  id_key = 'cfg'
+                }
+              }
+            }
           },
           {
             path = '/missing-single',
             methods = {'GET'},
             upstream_data_path = '$',
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$.b.id',
-                resource_key = '$.b',
+                data_paths = {
+                  {
+                    id_path = '$.b.id',
+                    path = '$.b'
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
                   id_key = 'cfg'
@@ -167,10 +207,14 @@ describe("Plugin: api-response-merger access", function()
             path = '/resource-id-missing',
             methods = {'GET'},
             upstream_data_path = '$',
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$.d.id',
-                resource_key = '$.d',
+                data_paths = {
+                  {
+                    id_path = '$.d.id',
+                    path = '$.d'
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_c_port,
                   id_key = 'org.name'
@@ -183,10 +227,14 @@ describe("Plugin: api-response-merger access", function()
             path = '/nestedkeyarray',
             methods = {'GET'},
             upstream_data_path = '$',
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$..c.xid',
-                resource_key = '$..c',
+                data_paths = {
+                  {
+                    id_path = '$..c.xid',
+                    path = '$..c',
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_c_port,
                   query_param_name = 'ids',
@@ -199,10 +247,14 @@ describe("Plugin: api-response-merger access", function()
             path = '/array-in-object',
             methods = {'POST'},
             upstream_data_path= "$", -- intentinally like this
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$..f.id',
-                resource_key = '$..f',
+                data_paths = {
+                  {
+                    id_path = '$..f.id',
+                    path = '$..f'
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
                   id_key = 'id',
@@ -210,8 +262,12 @@ describe("Plugin: api-response-merger access", function()
                 }
               },
               {
-                resource_id_path = '$.a.id',
-                resource_key = '$.a',
+                data_paths = {
+                  {
+                    id_path = '$.a.id',
+                    path = '$.a'
+                  }
+                },
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port,
                   id_key = 'id'
@@ -223,10 +279,14 @@ describe("Plugin: api-response-merger access", function()
             path = '/allow-missing',
             methods = {'GET'},
             upstream_data_path = '$',
-            keys_to_extend = {
+            resources_to_extend = {
               {
-                resource_id_path = '$..c.xid',
-                resource_key = '$..c',
+                data_paths = {
+                  {
+                    id_path = '$..c.xid',
+                    path = '$..c'
+                  }
+                },
                 allow_missing = true,
                 api = {
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_c_port,
@@ -479,6 +539,48 @@ describe("Plugin: api-response-merger access", function()
     assert.same(expected, json)
   end)
 
+  it("should handle multi data path response", function()
+    local array = {{
+                     b = {
+                       id = 'cfg-id',
+                     },
+                     foo = 'bar'
+                   }, {
+                     d = {
+                       id = 'cfg-id-2',
+                     },
+                     foo = 'bar-sec'
+                   }}
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_b = http_server_with_body(service_b_port, '[{ "cfg": "cfg-id", "something": "important"}, {"cfg":"cfg-id-2", "dog": "cat"}]')
+    helpers.wait_until(function()
+      return service_b:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/multidatapaths", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+    local expected = {
+      { b = {
+        cfg = 'cfg-id',
+        something = 'important'
+      },
+        foo = 'bar',
+      }, {
+        d = {
+          cfg = 'cfg-id-2',
+          dog = 'cat'
+        },
+        foo = 'bar-sec'
+      }}
+    assert.same(expected, json)
+  end)
+
   it("should handle array response with nested key", function()
     local array = {{
       c = {
@@ -701,6 +803,7 @@ describe("Plugin: api-response-merger access", function()
     local body = assert.res_status(200, res)
     assert.same(body,  ups_body)
   end)
+
   it("should merge response from two services, resource as nested array in object", function()
     local upstream_local_body =  { arr = {{f={id="a1"}}, {f={id="a2"}}}, c = "important",a = { id = 'resource_a_id'}, }
     upstream = http_server_with_body(upstream_port, cjson.encode(upstream_local_body))
