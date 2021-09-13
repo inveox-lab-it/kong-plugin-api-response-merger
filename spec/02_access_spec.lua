@@ -581,6 +581,41 @@ describe("Plugin: api-response-merger access", function()
     assert.same(expected, json)
   end)
 
+  it("should handle multi data path response - when some data_paths are missing", function()
+    local array = {{
+                     b = {
+                       id = 'cfg-id',
+                     },
+                     foo = 'bar'
+                   }, {
+                     foo = 'bar-sec'
+                   }}
+    upstream = http_server_with_body(upstream_port, cjson.encode(array))
+    service_b = http_server_with_body(service_b_port, '[{ "cfg": "cfg-id", "something": "important"}, {"cfg":"cfg-id-2", "dog": "cat"}]')
+    helpers.wait_until(function()
+      return service_b:alive() and upstream:alive()
+    end, 1)
+
+    local res = proxy_client:get("/multidatapaths", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+    local expected = {
+      { b = {
+        cfg = 'cfg-id',
+        something = 'important'
+      },
+        foo = 'bar',
+      }, {
+        foo = 'bar-sec'
+      }}
+    assert.same(expected, json)
+  end)
+
   it("should handle array response with nested key", function()
     local array = {{
       c = {

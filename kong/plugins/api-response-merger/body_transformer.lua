@@ -139,6 +139,9 @@ local function set_for_path(data_path, upstream_body, value, resource)
 
   --- if we are using json.path to set result
   local json_path_set = false
+  if resource ~= nil and resource.config.add_missing == false then
+    json_path_set = true
+  end
   for i, dest_resource_path in pairs(dest_resource_paths) do
     json_path_set = true
     local _dest_resource = upstream_body
@@ -192,7 +195,7 @@ local function set_for_path(data_path, upstream_body, value, resource)
 
     local current = upstream_body[paths[1]]
     for i = 2, paths_len - 1 do
-      if current ~= nil and current[path[i]] ~= nil then
+      if type(current) == 'table' and type(current[path[i]]) == 'table' then
         current = current[path[i]]
       end
     end
@@ -342,6 +345,14 @@ function _M.transform_json_body(resources_to_extend, upstream_body, http_config)
   -- prepare threads to find ids to query resources
   for i = 1, #resources_to_extend do
     local v = resources_to_extend[i]
+    if v.data_paths == nil or #v.data_paths == 0 then
+      kong.log.warn('Wrong configuration: ', 'missing data paths, resource: ', i)
+      return false, create_error_response('Wrong configuration', v.api.url, 200, 'Missing data paths')
+    end
+    if v.add_missing == true and #v.data_paths > 1 then
+      kong.log.warn('Wrong configuration: ', 'Cannot use add missing for more than one data path, resource: ', i)
+      return false, create_error_response('Wrong configuration', v.api.url, 200, 'Cannot use add missing for more than one data path')
+    end
     resources[i] = {
       config = v
     }
