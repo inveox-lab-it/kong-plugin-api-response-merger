@@ -1,3 +1,11 @@
+## [2.0.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.0.0...2.0.1) (2021-09-13)
+
+
+### Bug Fixes
+
+* **multipaths:** [LIT03-1136] optimize calling the same endpoint for several json-paths in API merger - fix using alternative json path for more than of data_paths configuration ([c63f9bd](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/c63f9bd36a7f27d32a50518e35d8c1f7ea194f25))
+* **multipaths:** [LIT03-1136] optimize calling the same endpoint for several json-paths in API merger - fix using alternative json path for more than of data_paths configuration ([38f1f41](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/38f1f4144f821919396e98e7f59d9052009d59b3))
+
 # [2.0.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.13.0...2.0.0) (2021-09-13)
 
 
