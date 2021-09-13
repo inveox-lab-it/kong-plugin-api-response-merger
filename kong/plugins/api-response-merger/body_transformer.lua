@@ -133,7 +133,7 @@ local function set_for_path(data_path, upstream_body, value, resource)
   local path = data_path.path
   local dest_resource_paths, err = jp.paths(upstream_body, path)
   if err ~= nil then
-    kong.log.error("unable to find paths ", data_path.path, " error ", err)
+    kong.log.error("unable to find paths ", path, " error ", err)
     return false, err
   end
 
