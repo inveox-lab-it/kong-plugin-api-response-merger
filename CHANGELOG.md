@@ -1,3 +1,25 @@
+# [2.0.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.13.0...2.0.0) (2021-09-13)
+
+
+### Features
+
+* **multipaths:** [LIT03-1136] optimize calling the same endpoint for several json-paths in API merger  BREAKING CHANGE: NEW CONFIG ([ac18a5b](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/ac18a5b6ad3a585287627f155cc65c41d1851223))
+
+
+### BREAKING CHANGES
+
+* **multipaths:** NEW CONFIG
+
+* Update kong/plugins/api-response-merger/body_transformer.lua
+
+Co-authored-by: Marcin Kaciuba <marcin.kaciuba@inveox.com>
+
+* Update kong/plugins/api-response-merger/body_transformer.lua
+
+Co-authored-by: Marcin Kaciuba <marcin.kaciuba@inveox.com>
+
+Co-authored-by: Marcin Kaciuba <marcin.kaciuba@inveox.com>
+
 # [1.13.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/1.12.0...1.13.0) (2021-09-06)
 
 
