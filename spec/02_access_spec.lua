@@ -40,7 +40,7 @@ local function http_server_with_body(port, body, sc)
     end
   }, port, body, sc)
 
-  return thread:start(false, false)
+  return thread:start()
 end
 
 describe("Plugin: api-response-merger access", function()
@@ -292,6 +292,29 @@ describe("Plugin: api-response-merger access", function()
                   url = 'http://' .. helpers.mock_upstream_host ..':' .. service_c_port,
                   query_param_name = 'ids',
                   id_key = 'org.name'
+                }
+              }
+            }
+          },
+          {
+            path = '/different-upstream',
+            methods = {'POST'},
+            upstream = {
+              uri = 'http://' .. helpers.mock_upstream_host .. ':' .. service_b_port,
+              host_header = helpers.mock_upstream_host,
+            },
+            upstream_data_path = '$',
+            resources_to_extend = {
+              {
+                data_paths = {
+                  {
+                    id_path = '$.a.id',
+                    path = '$.a'
+                  }
+                },
+                api = {
+                  url = 'http://' .. helpers.mock_upstream_host ..':' .. service_a_port,
+                  id_key = 'id'
                 }
               }
             }
@@ -718,7 +741,7 @@ describe("Plugin: api-response-merger access", function()
     local body = assert.res_status(500, res)
     local json = cjson.decode(body)
     local expected = {
-      message = 'missing data for key "b" (id missing cfg="not-found")',
+      message = 'missing data for key "b" (missing for id: "not-found")',
       code = 'APIGatewayError',
       error = 'Resource fetch error',
       status = 500,
@@ -869,6 +892,24 @@ describe("Plugin: api-response-merger access", function()
             },
             json
     )
+  end)
+
+  it("should merge response from two services from different than default upstream", function()
+    service_a = http_server_with_body(service_a_port, '{ "id": "resource_a_id", "value": "important"}')
+    service_b = http_server_with_body(service_b_port, cjson.encode(upstream_body))
+    helpers.wait_until(function()
+      return service_a:alive() and service_b:alive()
+    end, 1)
+    local res = proxy_client:post("/different-upstream", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json",
+      },
+      body = upstream_body
+    })
+    local body = assert.res_status(200, res)
+    local json = cjson.decode(body)
+    assert.same({ a = { id = 'resource_a_id', value = 'important'}, baz = "cux" }, json)
   end)
 end)
 -- vim: filetype=lua:expandtab:shiftwidth=2:tabstop=4:softtabstop=2:textwidth=80
