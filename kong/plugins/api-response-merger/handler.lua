@@ -1,18 +1,23 @@
-local body_transformer = require 'kong.plugins.api-response-merger.body_transformer'
+local transformer = require 'kong.plugins.api-response-merger.transformer'
+local path_replacer = require 'kong.plugins.api-response-merger.path_replacer'
+local upstream_caller = require 'kong.plugins.api-response-merger.upstream_caller'
 local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
-local common_plugin_status, common_plugin_headers = pcall(require, 'kong.plugins.common.headers')
 local cjson = require('cjson.safe').new()
-cjson.decode_array_with_array_mt(true)
-local start_timer = monitoring.start_timer
 
-local is_json_body = body_transformer.is_json_body
+local is_json_body = transformer.is_json_body
 local kong = kong
 local ngx = ngx
-local http = require 'resty.http'
 local match = ngx.re.match
+local log = kong.log
+
+cjson.decode_array_with_array_mt(true)
 
 local APIResponseMergerHandler = {}
+
+function interp(s, tab)
+  return (s:gsub('($%b{})', function(w) return tab[w:sub(3, -2)] or w end))
+end
 
 local function contains(arr, search)
   for i = 1, #arr do
@@ -23,94 +28,115 @@ local function contains(arr, search)
   return false
 end
 
+local function build_request_body(original_request_body, request_builder)
+  local request_body = original_request_body;
+  if request_builder then
+    if request_builder.overwrite_body then
+      local captures = {}
+      if request_builder.overwrite_body then
+        for capture, value in pairs(request_builder.captures) do
+          captures[''..capture] = value
+        end
+      end
+      request_body = interp(request_builder.overwrite_body, captures)
+    end
+
+  end
+  return request_body, nil
+end
+
 function APIResponseMergerHandler:access(conf)
   local request = kong.request
   local response = kong.response
-  local upstream = conf.upstream
-  local http_config = conf.http_config
-
-  local client = http.new()
-  client:set_timeouts(http_config.connect_timeout, http_config.send_timeout, http_config.read_timeout)
-  local req_headers = request.get_headers()
-  req_headers['host'] = upstream.host_header
-  if common_plugin_status then
-    local upstream_headers = common_plugin_headers.get_upstream_headers(request)
-    for h, v in pairs(upstream_headers) do
-      if req_headers[h] == nil then
-        req_headers[h] = v
-      end
-    end
-    req_headers['user-agent'] = upstream_headers['user-agent']
-  end
+  local req_path = request.get_path()
   local req_method = request.get_method()
-  -- rewrite HEAD to GET to calcaulate correct content-length
+  -- rewrite HEAD to GET to calculate correct content-length
   if req_method == 'HEAD' then
     req_method = 'GET'
   end
 
-  local req_path = request.get_path()
-  local timer = start_timer(upstream.uri)
-  local res, err = client:request_uri(upstream.uri .. (conf.upstream.path_prefix or '') .. req_path, {
-    method = req_method,
-    headers = req_headers,
-    query = request.get_raw_query(),
-    body = request.get_raw_body()
-  })
-  client:set_keepalive(http_config.keepalive_timeout, http_config.keepalive_pool_size)
-  timer:stop()
+  local upstream = conf.upstream
+  local matchingPath = nil
+  local request_builder = nil
+  if conf.paths then
+    local paths = conf.paths
+    for i = 1, #paths do
+      local path = paths[i]
+      local captures = match(req_path, path.path, 'io')
+      if match(req_path, path.path, 'io') then
+        if contains(path.methods, req_method) then
+          matchingPath = path
+          upstream = path.upstream or upstream
+          request_builder = path.request
+          if request_builder then
+            request_builder.captures = captures
+          end
+          break
+        end
+      end
+    end
+  end
+  local http_config = conf.http_config
+  upstream.method = upstream.method or req_method
+
+  local caller = upstream_caller.create_caller(http_config)
+
+  local req_headers = request.get_headers()
+  req_headers['host'] = upstream.host_header
+  local request_body, err = build_request_body(request.get_raw_body(), request_builder)
+  if err then
+    log.err('Invalid request for upstream ', ' err: ' .. err)
+    return response.exit(500, { message = err })
+  end
+  req_headers['content-length'] = #(request_body or '')
+  local res, err = caller:call(upstream.uri .. (conf.upstream.path_prefix or '') .. req_path,
+          request.get_raw_query(),
+          request_body,
+          upstream.method,
+          req_headers
+  )
 
   if not res then
-    kong.log.err('Invalid response from upstream ', upstream.uri .. req_path .. ' err: ' .. err)
-    return response.exit(500, {message=err})
+    log.err('Invalid response from upstream ', upstream.uri .. req_path .. ' err: ' .. err)
+    return response.exit(500, { message = err })
   end
 
   res.headers['Transfer-Encoding'] = nil
   if res.status > 499 then
-    kong.log.err('Invalid response from upstream  ', upstream.uri, ' sc: ', res.status)
+    log.err('Invalid response from upstream  ', upstream.uri, ' sc: ', res.status)
     return response.exit(res.status, res.body, res.headers)
   end
 
-  if not conf.paths then
+  if matchingPath == nil then
     return response.exit(res.status, res.body, res.headers)
   end
 
-  local resources_to_extend = nil
-  local data_path = '$'
-  local paths = conf.paths
-  for i = 1, #paths do
-    local path = paths[i]
-    if match(req_path, path.path, 'io') then
-        if contains(path.methods, req_method) then
-          resources_to_extend = path.resources_to_extend
-          data_path = path.upstream_data_path
-          break
-        end
-    end
-  end
+  local resources_to_extend = matchingPath.resources_to_extend
+  local data_path = matchingPath.upstream_data_path or '$'
+
   if resources_to_extend ~= nil and is_json_body(res.headers['content-type']) then
     local data = cjson.decode(res.body)
     local data_to_transform = jp.query(data, data_path)
 
     if data_to_transform == nil or #data_to_transform ~= 1 then
-      kong.log.warn('No data to transform in path ', data_path)
+      log.warn('No data to transform in path ', data_path)
       return response.exit(res.status, res.body, res.headers)
     end
-    local ok, result = body_transformer.transform_json_body(resources_to_extend, data_to_transform[1], http_config)
+    local ok, result = transformer.transform_json_body(resources_to_extend, data_to_transform[1], caller)
     if not ok then
       return response.exit(500, result)
     end
 
-
     if data_path == '$' then
       data = result
     else
-      body_transformer.set_for_path({path = data_path} , data, result)
+      path_replacer.set_for_path(data_path, data, result)
     end
 
     local data_json = cjson.encode(data)
     return response.exit(res.status, data_json, res.headers)
   else
-    kong.log.warn('No match', req_path)
+    log.warn('No match', req_path)
   end
   response.exit(res.status, res.body, res.headers)
 end

@@ -17,7 +17,7 @@ config:
     uri: http://upstream
     host_header: upstream
   paths:
-    - path: /v1/data/.+
+    - path: /v1/data/[^/]+
       resources_to_extend:
         - data_paths:
             - path: "$.service-a"
@@ -54,6 +54,21 @@ config:
             data_path: "$.content"
             query_param_name: ids
             id_key: id
+    - path: /v1/data/(?<id>.*)/print
+      methods:
+        - GET
+      upstream:
+        uri: http://printing
+        host_header: printing
+        method: POST
+      request:
+        overwrite_body: |-
+            {
+              "object": {
+                "id": "${id}"
+              }
+            }
+        
 kind: KongPlugin
 metadata:
   name: api-response-merger-upstream
@@ -183,9 +198,12 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `config.upstream.uri`                                          |                     | Base upstream uri
 | `config.upstream.host_header`                                  |                     | Host header which should be passed to upstream
 | `config.upstream.path_prefix`                                  |    ``               | Prefix for path to upstream
+| `config.upstream.methdod`                                      |                     | Method used for upstream call (by default method from the request)
 | `config.paths`                                                 |                     | List of paths on which plugin should merge response
 | `config.paths[0].path`                                         |                     | Regular expression for path
+| `config.paths[0].upstream`                                     |                     | Upstream configuration which overrides base upstream config (see config.upstream)
 | `config.paths[0].upstream_data_path`                           |  `$`                | JSON path for data to transform
+| `config.paths[0].request.overwrite_body`                       | nil                 | New request body used for the upstream. It is interpolated with the captures for the path mapping (named variables are supported, see https://github.com/openresty/lua-nginx-module#ngxrematch)
 | `config.paths[0].resources_to_extend`                          |                     | List of resources to change/expand
 | `config.paths[0].resources_to_extend[0].data_paths`            |                     | List of JSON paths to change - at least one required
 | `config.paths[0].resources_to_extend[0].data_paths[0].path`    |                     | JSON path for key where to put response of resource upstream - path is required

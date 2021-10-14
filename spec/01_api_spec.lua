@@ -63,6 +63,39 @@ describe('Plugin: api-response-merger API', function()
                 }
               }
 
+            },
+            {
+              path = '/v1/request/.+',
+              methods = {'GET'},
+              upstream = {
+                uri = 'http://request-upstream',
+                method = 'POST',
+                host_header = 'request-upstream'
+              },
+              request = {
+                overwrite_body = [[
+                {
+                  "x": 123,
+                  "y": "newVal"
+                }
+                ]]
+              },
+              resources_to_extend = {
+                {
+                  data_paths = {
+                    {
+                      path = '$.a',
+                      id_path = '$.a.id'
+                    }
+                  },
+                  allow_missing = true,
+                  api = {
+                    url = 'http://service-a/v1/a/',
+                    id_key = 'a'
+                  }
+                }
+              }
+
             }
           }
         }

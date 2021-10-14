@@ -62,6 +62,30 @@ local resources_to_extend_type = {
   }
 }
 
+local request_builder = {
+  required = false,
+  type = "record",
+  fields = {
+    { overwrite_body = {
+      type = "string",
+      required = false
+    }}
+  }
+}
+
+local upstream_fields = {
+  { host_header = { required = true, type = "string"}},
+  { path_prefix = { required = false, type = "string"}},
+  { uri = { required = true, type = "string" }},
+  { method = { required = false, type = "string", one_of = {
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "PATCH",
+  } }},
+}
+
 local http_methods_arr_type = {
   type = "array",
   default = {"GET"},
@@ -96,11 +120,7 @@ return {
         { upstream = {
           type = "record",
           required = true,
-          fields = {
-            { host_header = { required = true, type = "string"}},
-            { path_prefix = { required = false, type = "string"}},
-            { uri = { required = true, type = "string" }},
-          }
+          fields = upstream_fields
         }},
         { paths = {
           required = false,
@@ -110,6 +130,12 @@ return {
             fields = {
               { path = { type = "string", default = "/" }},
               { methods = http_methods_arr_type },
+              { upstream = {
+                type = "record",
+                required = false,
+                fields = upstream_fields
+              }},
+              { request = request_builder },
               { upstream_data_path = { type = "string", default = "$" }},
               { resources_to_extend = resources_to_extend_type }
             }
