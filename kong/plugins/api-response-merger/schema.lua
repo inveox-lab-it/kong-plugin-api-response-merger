@@ -69,13 +69,15 @@ local request_builder = {
     { overwrite_body = {
       type = "string",
       required = false
-    }}
+    }},
+    { resources_to_extend = resources_to_extend_type }
   }
 }
 
 local upstream_fields = {
   { host_header = { required = true, type = "string"}},
   { path_prefix = { required = false, type = "string"}},
+  { path = { required = false, type = "string"}},
   { uri = { required = true, type = "string" }},
   { method = { required = false, type = "string", one_of = {
     "GET",

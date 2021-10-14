@@ -3,9 +3,17 @@ local http = require 'resty.http'
 local common_plugin_status, common_plugin_headers = pcall(require, 'kong.plugins.common.headers')
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
 local start_timer = monitoring.start_timer
+local cjson = require('cjson.safe').new()
 
 local caller = {}
 local meta_caller = {__index = caller}
+
+local function modify_request_headers_based_on_request_body(req_headers, request_body)
+  if request_body and cjson.decode(request_body) then
+    req_headers["content-type"] = "application/json"
+  end
+  req_headers['content-length'] = #(request_body or '')
+end
 
 function caller.call(self, req_uri, req_query, body, method, req_headers)
   req_headers = req_headers or kong.request.get_headers()
@@ -21,6 +29,7 @@ function caller.call(self, req_uri, req_query, body, method, req_headers)
     end
     req_headers['user-agent'] = upstream_headers['user-agent']
   end
+  modify_request_headers_based_on_request_body(req_headers, body)
   local res, err = client:request_uri(req_uri, {
     query = req_query,
     headers = req_headers,

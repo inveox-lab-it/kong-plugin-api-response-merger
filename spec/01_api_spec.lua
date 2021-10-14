@@ -75,10 +75,26 @@ describe('Plugin: api-response-merger API', function()
               request = {
                 overwrite_body = [[
                 {
-                  "x": 123,
+                  "x": {
+                    "id": 123,
+                  },
                   "y": "newVal"
                 }
-                ]]
+                ]],
+                resources_to_extend = {
+                  {
+                    data_paths = {
+                      {
+                        path = '$.x',
+                        id_path = '$.x.id'
+                      }
+                    },
+                    api = {
+                      url = 'http://service-a/v1/x/',
+                      id_key = 'x'
+                    }
+                  }
+                },
               },
               resources_to_extend = {
                 {

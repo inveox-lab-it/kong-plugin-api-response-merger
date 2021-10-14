@@ -9,13 +9,14 @@ local is_json_body = transformer.is_json_body
 local kong = kong
 local ngx = ngx
 local match = ngx.re.match
+--local gsub = ngx.re.gsub
 local log = kong.log
 
 cjson.decode_array_with_array_mt(true)
 
 local APIResponseMergerHandler = {}
 
-function interp(s, tab)
+local function interp(s, tab)
   return (s:gsub('($%b{})', function(w) return tab[w:sub(3, -2)] or w end))
 end
 
@@ -28,7 +29,7 @@ local function contains(arr, search)
   return false
 end
 
-local function build_request_body(original_request_body, request_builder)
+local function build_request_body(original_request_body, request_builder, caller)
   local request_body = original_request_body;
   if request_builder then
     if request_builder.overwrite_body then
@@ -41,8 +42,30 @@ local function build_request_body(original_request_body, request_builder)
       request_body = interp(request_builder.overwrite_body, captures)
     end
 
+    if request_builder.resources_to_extend ~= nil and #request_builder.resources_to_extend > 0 then
+      local data = cjson.decode(request_body)
+      if not data then
+        return nil, "Cannot extend resources in non-json request"
+      end
+      local ok, result = transformer.transform_json_body(request_builder.resources_to_extend, data, caller)
+      if not ok then
+        return nil, "Cannot transform request: " .. (result.message or 'Unknown error')
+      end
+      request_body = cjson.encode(result)
+    end
   end
   return request_body, nil
+end
+
+local function create_simple_error_response(message)
+  local err_res = {
+    message = message,
+    status = 500,
+    error = 'Resource fetch error',
+    code = 'APIGatewayError'
+  }
+
+  return err_res
 end
 
 function APIResponseMergerHandler:access(conf)
@@ -83,12 +106,13 @@ function APIResponseMergerHandler:access(conf)
 
   local req_headers = request.get_headers()
   req_headers['host'] = upstream.host_header
-  local request_body, err = build_request_body(request.get_raw_body(), request_builder)
+  local request_body, err = build_request_body(request.get_raw_body(), request_builder, caller)
   if err then
-    log.err('Invalid request for upstream ', ' err: ' .. err)
-    return response.exit(500, { message = err })
+    log.err('Error for upstream ', ' err: ' .. err)
+    return response.exit(500, create_simple_error_response(err))
   end
-  req_headers['content-length'] = #(request_body or '')
+
+  req_path = upstream.path or req_path
   local res, err = caller:call(upstream.uri .. (conf.upstream.path_prefix or '') .. req_path,
           request.get_raw_query(),
           request_body,
@@ -98,7 +122,7 @@ function APIResponseMergerHandler:access(conf)
 
   if not res then
     log.err('Invalid response from upstream ', upstream.uri .. req_path .. ' err: ' .. err)
-    return response.exit(500, { message = err })
+    return response.exit(500, create_simple_error_response(err))
   end
 
   res.headers['Transfer-Encoding'] = nil
@@ -108,13 +132,14 @@ function APIResponseMergerHandler:access(conf)
   end
 
   if matchingPath == nil then
+    log.warn('No match', req_path)
     return response.exit(res.status, res.body, res.headers)
   end
 
   local resources_to_extend = matchingPath.resources_to_extend
   local data_path = matchingPath.upstream_data_path or '$'
 
-  if resources_to_extend ~= nil and is_json_body(res.headers['content-type']) then
+  if resources_to_extend ~= nil and #resources_to_extend > 0 and is_json_body(res.headers['content-type']) then
     local data = cjson.decode(res.body)
     local data_to_transform = jp.query(data, data_path)
 
@@ -135,8 +160,6 @@ function APIResponseMergerHandler:access(conf)
 
     local data_json = cjson.encode(data)
     return response.exit(res.status, data_json, res.headers)
-  else
-    log.warn('No match', req_path)
   end
   response.exit(res.status, res.body, res.headers)
 end

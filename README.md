@@ -60,6 +60,7 @@ config:
       upstream:
         uri: http://printing
         host_header: printing
+        path: /data
         method: POST
       request:
         overwrite_body: |-
@@ -68,6 +69,19 @@ config:
                 "id": "${id}"
               }
             }
+        resources_to_extend:
+          - data_paths:
+              - path: "$.object"
+                id_path: "$.object.id"
+            api:
+                id_key: id
+                url: "http://service-b/v1/data/"
+                data_path: "$"
+          - data_paths:
+              - path: "$.configuration"
+            add_missing: true,
+            api:
+              url: "http://service-a/v1/data/"
         
 kind: KongPlugin
 metadata:
@@ -197,13 +211,13 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `consumer_id`                                                  |                     | The id of the Consumer which this plugin will target.
 | `config.upstream.uri`                                          |                     | Base upstream uri
 | `config.upstream.host_header`                                  |                     | Host header which should be passed to upstream
+| `config.upstream.path`                                         |                     | Overwrites path to upstream
 | `config.upstream.path_prefix`                                  |    ``               | Prefix for path to upstream
-| `config.upstream.methdod`                                      |                     | Method used for upstream call (by default method from the request)
+| `config.upstream.method`                                       |                     | Method used for upstream call (by default method from the request)
 | `config.paths`                                                 |                     | List of paths on which plugin should merge response
 | `config.paths[0].path`                                         |                     | Regular expression for path
 | `config.paths[0].upstream`                                     |                     | Upstream configuration which overrides base upstream config (see config.upstream)
 | `config.paths[0].upstream_data_path`                           |  `$`                | JSON path for data to transform
-| `config.paths[0].request.overwrite_body`                       | nil                 | New request body used for the upstream. It is interpolated with the captures for the path mapping (named variables are supported, see https://github.com/openresty/lua-nginx-module#ngxrematch)
 | `config.paths[0].resources_to_extend`                          |                     | List of resources to change/expand
 | `config.paths[0].resources_to_extend[0].data_paths`            |                     | List of JSON paths to change - at least one required
 | `config.paths[0].resources_to_extend[0].data_paths[0].path`    |                     | JSON path for key where to put response of resource upstream - path is required
@@ -214,5 +228,7 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `config.paths[0].resources_to_extend[0].api.query_param_name`  | nil                 | Query string parameter name when accessing multiple resources
 | `config.paths[0].resources_to_extend[0].allow_missing`         | false               | Flag indicating if merger should returns error when resource is missing. Default false
 | `config.paths[0].resources_to_extend[0].add_missing`           | false               | Flag indicating if merger should try adding the whole upstream body under the path if the id is missing
+| `config.paths[0].request.overwrite_body`                       | nil                 | New request body used for the upstream. It is interpolated with the captures for the path mapping (named variables are supported, see https://github.com/openresty/lua-nginx-module#ngxrematch)
+| `config.paths[0].request.resources_to_extend`                  | nil                 | List of resources to be changed/expanded (see details above)
 
 

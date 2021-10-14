@@ -40,7 +40,7 @@ local function http_server_with_body(port, body, sc)
     end
   }, port, body, sc)
 
-  return thread:start(false, false)
+  return thread:start()
 end
 
 describe("Plugin: api-response-merger access", function()
