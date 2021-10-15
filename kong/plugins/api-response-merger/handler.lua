@@ -125,7 +125,7 @@ function APIResponseMergerHandler:access(conf)
   end
 
   req_path = upstream.path or req_path
-  local res, err = caller:call(upstream.uri .. (conf.upstream.path_prefix or '') .. req_path,
+  local res, err = caller:call(upstream.uri .. (upstream.path_prefix or '') .. req_path,
           request.get_raw_query(),
           request_body,
           upstream.method or req_method,
