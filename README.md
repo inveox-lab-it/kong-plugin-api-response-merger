@@ -223,7 +223,7 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `config.paths[0].resources_to_extend[0].data_paths[0].path`    |                     | JSON path for key where to put response of resource upstream - path is required
 | `config.paths[0].resources_to_extend[0].data_paths[0].id_path` |                     | JSON path for id of resource in upstream response
 | `config.paths[0].resources_to_extend[0].api`                   |                     | Object with config for resource upstream
-| `config.paths[0].resources_to_extend[0].api.url`               |                     | Adress for api from given resource can be retrieved, api can be interpolated with values from the body (response or request - currently transformer, e.g. for ```{ "object": {"id": "id_value" } } ``` the following expression can be used _${object.id}_)
+| `config.paths[0].resources_to_extend[0].api.url`               |                     | Adress for api from given resource can be retrieved, url can be interpolated with values from the body (response or request - currently transformed, e.g. for ```{ "object": {"id": "id_value" } } ``` the following expression can be used _${object.id}_ e.g. url = _http://resource-service/resources/${object.id}/other-resources_)
 | `config.paths[0].resources_to_extend[0].api.data_path`         | `$`                 | JSON path for resource data
 | `config.paths[0].resources_to_extend[0].api.query_param_name`  | nil                 | Query string parameter name when accessing multiple resources
 | `config.paths[0].resources_to_extend[0].allow_missing`         | false               | Flag indicating if merger should returns error when resource is missing. Default false
