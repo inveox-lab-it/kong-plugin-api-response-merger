@@ -275,6 +275,26 @@ describe("Plugin: api-response-merger access for request", function()
               }
             }
           },
+          {
+            path = '/change_api_url_using_request_body',
+            upstream_data_path = '$',
+            methods = {'POST'},
+            request = {
+              resources_to_extend = {
+                {
+                  data_paths = {
+                    {
+                      path = '$.add'
+                    }
+                  },
+                  add_missing = true,
+                  api = {
+                    url = 'http://' .. helpers.mock_upstream_host ..':' .. service_b_port .. '/${a.id}',
+                  }
+                }
+              }
+            }
+          },
         }
       }
     }
@@ -533,6 +553,28 @@ describe("Plugin: api-response-merger access for request", function()
     assert.same({ baz = "cux" }, req_json)
   end)
 
+  it("should change api url with body value", function()
+    service_b = http_server_with_body(service_b_port, '{ "value": "important"}')
+    upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body))
+    helpers.wait_until(function()
+      return service_b:alive() and upstream:alive()
+    end, 1)
+    local res = proxy_client:post("/change_api_url_using_request_body", {
+      headers = {
+        host = "service.test",
+        ["Content-Type"] = "application/json"
+      },
+      body = upstream_body
+    })
+    assert.res_status(200, res)
+
+    local upstream_request = get_service_request(upstream)
+    local req_json = cjson.decode(upstream_request.request)
+    assert.same({ a = { id = 'resource_a_id' }, baz = "cux", add = {value = "important"} }, req_json)
+
+    local service_b_request = get_service_request(service_b)
+    assert.same('/resource_a_id?', service_b_request.path)
+  end)
 
 end)
 -- vim: filetype=lua:expandtab:shiftwidth=2:tabstop=4:softtabstop=2:textwidth=80

@@ -2,6 +2,7 @@ local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local path_replacer = require 'kong.plugins.api-response-merger.path_replacer'
 local cjson = require('cjson.safe').new()
 local utils = require 'kong.tools.utils'
+local interpolate_with_body = require('kong.plugins.api-response-merger.interpolator').interpolate_with_body
 
 local split = utils.split
 
@@ -141,7 +142,7 @@ local function set_paths(data_paths, upstream_body, value, resource)
 end
 
 -- method used for calling services for given key
-local function fetch(resource_index, resource_config, upstream_caller)
+local function fetch(resource_index, resource_config, upstream_caller, upstream_body)
   local config = resource_config.config
   local api = config.api
   local req_uri = api.url
@@ -166,6 +167,7 @@ local function fetch(resource_index, resource_config, upstream_caller)
     req_uri = req_uri .. resource_config.ids[1]
   end
 
+  req_uri = interpolate_with_body(req_uri, upstream_body)
   local res, err = upstream_caller:call(req_uri, req_query)
 
   if not res then
@@ -267,7 +269,7 @@ function _M.transform_json_body(resources_to_extend, upstream_body, upstream_cal
   local threads = {}
 
   for resource_index, value in pairs(resources) do
-    insert(threads, spawn(fetch, resource_index, value, upstream_caller))
+    insert(threads, spawn(fetch, resource_index, value, upstream_caller, upstream_body))
   end
 
   for i = 1, #threads do

@@ -4,6 +4,7 @@ local upstream_caller = require 'kong.plugins.api-response-merger.upstream_calle
 local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
 local cjson = require('cjson.safe').new()
+local interpolate = require('kong.plugins.api-response-merger.interpolator').interpolate
 
 local is_json_body = transformer.is_json_body
 local kong = kong
@@ -16,9 +17,6 @@ cjson.decode_array_with_array_mt(true)
 
 local APIResponseMergerHandler = {}
 
-local function interp(s, tab)
-  return (s:gsub('($%b{})', function(w) return tab[w:sub(3, -2)] or w end))
-end
 
 local function contains(arr, search)
   for i = 1, #arr do
@@ -39,7 +37,7 @@ local function build_request_body(original_request_body, request_builder, caller
           captures[''..capture] = value
         end
       end
-      request_body = interp(request_builder.overwrite_body, captures)
+      request_body = interpolate(request_builder.overwrite_body, captures)
     end
 
     if request_builder.resources_to_extend ~= nil and #request_builder.resources_to_extend > 0 then
