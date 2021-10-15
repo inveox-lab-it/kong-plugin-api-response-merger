@@ -17,6 +17,7 @@ end
 
 function caller.call(self, req_uri, req_query, body, method, req_headers)
   req_headers = req_headers or kong.request.get_headers()
+  method = method or 'GET'
   local client = http.new()
   client:set_timeouts(self.http_config.connect_timeout, self.http_config.send_timeout, self.http_config.read_timeout)
   local timer = start_timer(req_uri)
