@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.1...2.1.2) (2021-10-15)
+
+
+### Bug Fixes
+
+* **request:** [LIT03-1206] overwriting and building request (Scanning: Printing (BE)) - fix ([9f6e408](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/9f6e40855888002762c93a67648c98518939b90c))
+
 ## [2.1.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.0...2.1.1) (2021-10-15)
 
 
