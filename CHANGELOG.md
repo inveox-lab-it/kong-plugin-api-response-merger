@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.2...2.2.0) (2021-10-21)
+
+
+### Features
+
+* use unique ids query ([3024e30](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/3024e30f13c77886c20b2eba0b520e5713e0c399))
+
 ## [2.1.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.1...2.1.2) (2021-10-15)
 
 
