@@ -33,6 +33,20 @@ local function dump(o) --luacheck: ignore
   end
 end
 
+local function  table_unique(array)
+  local hash = {}
+  local res = {}
+
+  for _,v in ipairs(array) do
+    if (not hash[v]) then
+        res[#res+1] = v -- you could print here instead of saving to result table if you wanted
+        hash[v] = true
+    end
+  end
+
+  return res
+end
+
 local function read_json_body(body)
   if body then
     return cjson.decode(body)
@@ -258,6 +272,7 @@ function _M.transform_json_body(resources_to_extend, upstream_body, upstream_cal
       log.warn('No resource ids found skip: ', resource_index)
       resources[resource_index] = nil
     else
+      ids = table_unique(ids)
       resources[resource_index].ids = ids
       resources[resource_index].ids_len = #ids
     end
