@@ -10,7 +10,6 @@ local is_json_body = transformer.is_json_body
 local kong = kong
 local ngx = ngx
 local match = ngx.re.match
---local gsub = ngx.re.gsub
 local log = kong.log
 
 cjson.decode_array_with_array_mt(true)
@@ -25,6 +24,20 @@ local function contains(arr, search)
     end
   end
   return false
+end
+
+local function shallow_copy(orig)
+  local orig_type = type(orig)
+  local copy
+  if orig_type == 'table' then
+    copy = {}
+    for orig_key, orig_value in pairs(orig) do
+      copy[orig_key] = orig_value
+    end
+  else -- number, string, boolean, etc
+    copy = orig
+  end
+  return copy
 end
 
 local function build_request_body(original_request_body, request_builder, caller)
@@ -88,8 +101,8 @@ function APIResponseMergerHandler:access(conf)
         if contains(path.methods, req_method) then
           matchingPath = path
           upstream = path.upstream or upstream
-          request_builder = path.request
-          if request_builder then
+          if path.request then
+            request_builder = shallow_copy(path.request)
             request_builder.captures = captures
           end
           break
@@ -98,7 +111,6 @@ function APIResponseMergerHandler:access(conf)
     end
   end
   local http_config = conf.http_config
-  upstream.method = upstream.method or req_method
 
   local caller = upstream_caller.create_caller(http_config)
 
@@ -111,10 +123,10 @@ function APIResponseMergerHandler:access(conf)
   end
 
   req_path = upstream.path or req_path
-  local res, err = caller:call(upstream.uri .. (conf.upstream.path_prefix or '') .. req_path,
+  local res, err = caller:call(upstream.uri .. (upstream.path_prefix or '') .. req_path,
           request.get_raw_query(),
           request_body,
-          upstream.method,
+          upstream.method or req_method,
           req_headers
   )
 

@@ -1,3 +1,24 @@
+# [2.2.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.2...2.2.0) (2021-10-21)
+
+
+### Features
+
+* use unique ids query ([3024e30](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/3024e30f13c77886c20b2eba0b520e5713e0c399))
+
+## [2.1.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.1...2.1.2) (2021-10-15)
+
+
+### Bug Fixes
+
+* **request:** [LIT03-1206] overwriting and building request (Scanning: Printing (BE)) - fix ([9f6e408](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/9f6e40855888002762c93a67648c98518939b90c))
+
+## [2.1.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.0...2.1.1) (2021-10-15)
+
+
+### Bug Fixes
+
+* **request:** [LIT03-1206] overwriting and building request (Scanning: Printing (BE)) - fix ([d9b4fa3](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/d9b4fa38efea4b6ed19bc4a5cdbae0dde2241cee))
+
 # [2.1.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.0.1...2.1.0) (2021-10-14)
 
 
