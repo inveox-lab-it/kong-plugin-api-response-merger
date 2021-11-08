@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.0...2.2.1) (2021-11-08)
+
+
+### Bug Fixes
+
+* handle nil in query params ([87bff07](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/87bff076e815d81d8578d31640582996aa50468f))
+
 # [2.2.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.2...2.2.0) (2021-10-21)
 
 
