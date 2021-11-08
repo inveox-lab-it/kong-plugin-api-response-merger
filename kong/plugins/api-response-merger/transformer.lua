@@ -171,7 +171,9 @@ local function fetch(resource_index, resource_config, upstream_caller)
     local query_join = ''
     local ids = resource_config.ids
     for i = 1, ids_len do
-      req_query = req_query .. query_join .. query_param_name .. '=' .. ids[i]
+      if ids[i] ~= nil then
+        req_query = req_query .. query_join .. query_param_name .. '=' .. ids[i]
+      end
       query_join = '&'
     end
     req_query = req_query .. '&size=' .. (ids_len + 1)
