@@ -1,3 +1,10 @@
+## [2.2.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.1...2.2.2) (2021-12-15)
+
+
+### Bug Fixes
+
+* explicte set host header when calling upstreams ([8462c36](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/8462c360e3b290d0b60713ac300467429039c760))
+
 ## [2.2.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.0...2.2.1) (2021-11-08)
 
 
