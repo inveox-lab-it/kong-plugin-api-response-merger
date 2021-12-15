@@ -63,9 +63,11 @@ function caller.call(self, req_uri, req_query, body, method, req_headers)
   end
   modify_request_headers_based_on_request_body(req_headers, body)
   -- when using istio sidecar host header have to be passed explicite
-  local parsed_url = parse_url(req_uri)
-  local host = parsed_url.host
-  req_headers['host'] = host
+  if req_headers['host'] == nil then
+    local parsed_url = parse_url(req_uri)
+    local host = parsed_url.host
+    req_headers['host'] = host
+  end
 
   local res, err = client:request_uri(req_uri, {
     query = req_query,
