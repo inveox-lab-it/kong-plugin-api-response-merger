@@ -181,7 +181,7 @@ local function fetch(resource_index, resource_config, upstream_caller)
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
   end
-  local req_headers = {}
+  local req_headers = kong.request.get_headers()
 
   if api.host_header ~= nil and api.host_header ~= '' then
     req_headers['host'] = api.host_header
