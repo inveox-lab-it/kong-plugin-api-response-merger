@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.2...2.3.0) (2021-12-15)
+
+
+### Features
+
+* allow to overirde host_header in calls ([93d08bd](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/93d08bd8d90c37f5cce5ec09c0dc229cdb1cb487))
+
 ## [2.2.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.1...2.2.2) (2021-12-15)
 
 
