@@ -1,3 +1,31 @@
+## [2.3.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.3.0...2.3.1) (2021-12-15)
+
+
+### Bug Fixes
+
+* copy request headers ([149c310](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/149c3101ffd39de3527e42a05f1c1281f5726f92))
+
+# [2.3.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.2...2.3.0) (2021-12-15)
+
+
+### Features
+
+* allow to overirde host_header in calls ([93d08bd](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/93d08bd8d90c37f5cce5ec09c0dc229cdb1cb487))
+
+## [2.2.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.1...2.2.2) (2021-12-15)
+
+
+### Bug Fixes
+
+* explicte set host header when calling upstreams ([8462c36](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/8462c360e3b290d0b60713ac300467429039c760))
+
+## [2.2.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.2.0...2.2.1) (2021-11-08)
+
+
+### Bug Fixes
+
+* handle nil in query params ([87bff07](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/87bff076e815d81d8578d31640582996aa50468f))
+
 # [2.2.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.1.2...2.2.0) (2021-10-21)
 
 

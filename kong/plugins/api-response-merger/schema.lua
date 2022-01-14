@@ -6,6 +6,10 @@ local api_type = {
       type = "string",
       required = true
     }},
+    { host_header = {
+      type = "string",
+      required = false,
+    }},
     { data_path = {
       type = "string",
       default = "$"

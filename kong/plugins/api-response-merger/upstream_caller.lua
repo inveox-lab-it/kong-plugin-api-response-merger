@@ -4,9 +4,40 @@ local common_plugin_status, common_plugin_headers = pcall(require, 'kong.plugins
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
 local start_timer = monitoring.start_timer
 local cjson = require('cjson.safe').new()
+local url = require "socket.url"
 
 local caller = {}
 local meta_caller = {__index = caller}
+local parsed_urls_cache = {}
+
+-- Parse host url.
+-- @param `url` host url
+-- @return `parsed_url` a table with host details:
+-- scheme, host, port, path, query, userinfo
+local function parse_url(host_url)
+  local parsed_url = parsed_urls_cache[host_url]
+
+  if parsed_url then
+    return parsed_url
+  end
+
+  parsed_url = url.parse(host_url)
+  if not parsed_url.port then
+    if parsed_url.scheme == "http" then
+      parsed_url.port = 80
+    elseif parsed_url.scheme == "https" then
+      parsed_url.port = 443
+    end
+  end
+  if not parsed_url.path then
+    parsed_url.path = "/"
+  end
+
+  parsed_urls_cache[host_url] = parsed_url
+
+  return parsed_url
+end
+
 
 local function modify_request_headers_based_on_request_body(req_headers, request_body)
   if request_body and cjson.decode(request_body) then
@@ -31,6 +62,13 @@ function caller.call(self, req_uri, req_query, body, method, req_headers)
     req_headers['user-agent'] = upstream_headers['user-agent']
   end
   modify_request_headers_based_on_request_body(req_headers, body)
+  -- when using istio sidecar host header have to be passed explicite
+  if req_headers['host'] == nil then
+    local parsed_url = parse_url(req_uri)
+    local host = parsed_url.host
+    req_headers['host'] = host
+  end
+
   local res, err = client:request_uri(req_uri, {
     query = req_query,
     headers = req_headers,

@@ -172,7 +172,9 @@ local function fetch(resource_index, resource_config, upstream_caller, upstream_
     local query_join = ''
     local ids = resource_config.ids
     for i = 1, ids_len do
-      req_query = req_query .. query_join .. query_param_name .. '=' .. ids[i]
+      if ids[i] ~= nil then
+        req_query = req_query .. query_join .. query_param_name .. '=' .. ids[i]
+      end
       query_join = '&'
     end
     req_query = req_query .. '&size=' .. (ids_len + 1)
@@ -180,9 +182,13 @@ local function fetch(resource_index, resource_config, upstream_caller, upstream_
   elseif ids_len == 1 then
     req_uri = req_uri .. resource_config.ids[1]
   end
+  local req_headers = kong.request.get_headers()
 
   req_uri = interpolate_with_body(req_uri, upstream_body)
-  local res, err = upstream_caller:call(req_uri, req_query)
+  if api.host_header ~= nil and api.host_header ~= '' then
+    req_headers['host'] = api.host_header
+  end
+  local res, err = upstream_caller:call(req_uri, req_query, nil, nil, req_headers)
 
   if not res then
     log.err('Invalid response from upstream resource url: ', req_uri, ' err: ', err)
