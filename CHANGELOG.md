@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.3.1...2.3.2) (2022-01-24)
+
+
+### Bug Fixes
+
+* **request:** [LIT03-1206] api url interpolation ([#19](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/issues/19)) ([54b6060](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/54b6060be6156970a2d8de8446017f1923aca11a))
+
 ## [2.3.1](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.3.0...2.3.1) (2021-12-15)
 
 
