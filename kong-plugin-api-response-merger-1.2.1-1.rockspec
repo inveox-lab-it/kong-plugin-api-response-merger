@@ -22,6 +22,7 @@ build = {
         ["kong.plugins."..pluginName..".handler"] = "kong/plugins/"..pluginName.."/handler.lua",
         ["kong.plugins."..pluginName..".schema"] = "kong/plugins/"..pluginName.."/schema.lua",
         ["kong.plugins."..pluginName..".path_replacer"] = "kong/plugins/"..pluginName.."/path_replacer.lua",
+        ["kong.plugins."..pluginName..".interpolator"] = "kong/plugins/"..pluginName.."/interpolator.lua",
         ["kong.plugins."..pluginName..".transformer"] = "kong/plugins/"..pluginName.."/transformer.lua",
         ["kong.plugins."..pluginName..".upstream_caller"] = "kong/plugins/"..pluginName.."/upstream_caller.lua",
         ["kong.plugins."..pluginName..".jsonpath"] = "kong/plugins/"..pluginName.."/jsonpath.lua",
