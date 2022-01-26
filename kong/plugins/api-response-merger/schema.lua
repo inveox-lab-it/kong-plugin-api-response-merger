@@ -74,6 +74,11 @@ local request_builder = {
       type = "string",
       required = false
     }},
+    { extend_with_auth_token = {
+      required = false,
+      type = "boolean",
+      default = false
+    }},
     { resources_to_extend = resources_to_extend_type }
   }
 }

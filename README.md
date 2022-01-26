@@ -63,10 +63,12 @@ config:
         path: /data
         method: POST
       request:
+        extend_with_auth_token: true
         overwrite_body: |-
             {
               "object": {
-                "id": "${id}"
+                "id": "${id}",
+                "user": "${auth_token.ext.user.id}"
               }
             }
         resources_to_extend:
@@ -230,5 +232,6 @@ You can combine `consumer_id` and `service_id` in the same request, to furthermo
 | `config.paths[0].resources_to_extend[0].add_missing`           | false               | Flag indicating if merger should try adding the whole upstream body under the path if the id is missing
 | `config.paths[0].request.overwrite_body`                       | nil                 | New request body used for the upstream. It is interpolated with the captures for the path mapping (named variables are supported, see https://github.com/openresty/lua-nginx-module#ngxrematch)
 | `config.paths[0].request.resources_to_extend`                  | nil                 | List of resources to be changed/expanded (see details above)
+| `config.paths[0].request.extend_with_auth_token`               | false               | Whether the auth token should be used for interpolation of request body - if true, it can be accessed by "auth_token" param, e.g. ```{ "object": {"user_id": "${auth_token.ent.user.id}" } } ```
 
 

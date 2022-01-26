@@ -81,6 +81,7 @@ describe('Plugin: api-response-merger API', function()
                   "y": "newVal"
                 }
                 ]],
+                extend_with_auth_token = true,
                 resources_to_extend = {
                   {
                     data_paths = {
