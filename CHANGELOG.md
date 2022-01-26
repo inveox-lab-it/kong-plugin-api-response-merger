@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.3.2...2.4.0) (2022-01-26)
+
+
+### Features
+
+* **request:** [LIT03-1512] using auth_token in interpolation of request body ([#24](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/issues/24)) ([fe8cde4](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/commit/fe8cde46367eb6c3651a8097f6784ec9e3c6e9ca))
+
 ## [2.3.2](https://github.com/inveox-lab-it/kong-plugin-api-response-merger/compare/2.3.1...2.3.2) (2022-01-24)
 
 
