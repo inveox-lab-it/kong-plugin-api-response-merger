@@ -5,17 +5,19 @@ local jp = require 'kong.plugins.api-response-merger.jsonpath'
 local monitoring = require 'kong.plugins.api-response-merger.monitoring'
 local cjson = require('cjson.safe').new()
 local interpolate = require('kong.plugins.api-response-merger.interpolator').interpolate
+local utils = require 'kong.tools.utils'
 
 local is_json_body = transformer.is_json_body
 local kong = kong
 local ngx = ngx
+local decode_base64 = ngx.decode_base64
 local match = ngx.re.match
 local log = kong.log
+local split = utils.split
 
 cjson.decode_array_with_array_mt(true)
 
 local APIResponseMergerHandler = {}
-
 
 local function contains(arr, search)
   for i = 1, #arr do
@@ -40,17 +42,36 @@ local function shallow_copy(orig)
   return copy
 end
 
-local function build_request_body(original_request_body, request_builder, caller)
+local function get_auth_token_payload(auth_header)
+  if auth_header ~= nil then
+    local authHeaderSplitted = split(auth_header)
+    local token = (#authHeaderSplitted == 2 and authHeaderSplitted[1]:lower() == "bearer") and authHeaderSplitted[2] or nil
+    if token ~= nil then
+      local tokenSplitted = split(token, ".")
+      local payload = (#tokenSplitted == 3) and tokenSplitted[2] or nil
+      if payload ~= nil then
+        local payloadData = cjson.decode(decode_base64(payload))
+        return payloadData or {}
+      end
+    end
+  end
+  return {}
+end
+
+local function build_request_body(original_request_body, request_builder, auth_token, caller)
   local request_body = original_request_body;
   if request_builder then
     if request_builder.overwrite_body then
-      local captures = {}
+      local interpolation_table = {}
       if request_builder.overwrite_body then
         for capture, value in pairs(request_builder.captures) do
-          captures[''..capture] = value
+          interpolation_table['' .. capture] = value
         end
       end
-      request_body = interpolate(request_builder.overwrite_body, captures)
+      if request_builder.extend_with_auth_token then
+        interpolation_table['auth_token'] = get_auth_token_payload(auth_token)
+      end
+      request_body = interpolate(request_builder.overwrite_body, interpolation_table)
     end
 
     if request_builder.resources_to_extend ~= nil and #request_builder.resources_to_extend > 0 then
@@ -116,7 +137,11 @@ function APIResponseMergerHandler:access(conf)
 
   local req_headers = request.get_headers()
   req_headers['host'] = upstream.host_header
-  local request_body, err = build_request_body(request.get_raw_body(), request_builder, caller)
+  local request_body, err = build_request_body(
+          request.get_raw_body(),
+          request_builder,
+          request.get_header("authorization"),
+          caller)
   if err then
     log.err('Error for upstream ', ' err: ' .. err)
     return response.exit(500, create_simple_error_response(err))

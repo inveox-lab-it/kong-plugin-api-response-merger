@@ -181,6 +181,20 @@ describe("Plugin: api-response-merger access for request", function()
             }
           },
           {
+            path = '/change_request_with_templating_with_auth_token_parsing',
+            methods = { 'GET' },
+            upstream_data_path = '$',
+            upstream = {
+              uri = 'http://' .. helpers.mock_upstream_host .. ':' .. upstream_port,
+              method = 'POST',
+              host_header = helpers.mock_upstream_host,
+            },
+            request = {
+              extend_with_auth_token = true,
+              overwrite_body = '{ "x" : "${auth_token.ext.user.organization.type}" }'
+            }
+          },
+          {
             path = '/extend_request',
             upstream_data_path = '$',
             methods = {'POST'},
@@ -426,6 +440,44 @@ describe("Plugin: api-response-merger access for request", function()
     assert.same('POST', upstream_request.method)
     local req_json = cjson.decode(upstream_request.request)
     assert.same({ x = "1232-323-2" }, req_json)
+  end)
+
+  it("should change request content with templating from access token", function()
+    upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body), "200 OK")
+    helpers.wait_until(function()
+      return upstream:alive()
+    end, 3)
+    local res = proxy_client:get("/change_request_with_templating_with_auth_token_parsing", {
+      headers = {
+        host = "service.test",
+        authorization = "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6InB1YmxpYzpkOTA3NTA5OC01MzFlLTQ1MTQtYjI2NS03ZGRhNjA0NTg4YzkifQ.eyJhdWQiOltdLCJjbGllbnRfaWQiOiJwb3J0YWxfY2xpZW50IiwiZXhwIjoxNjQzMTg1OTYwLCJleHQiOnsicHJpdmlsZWdlcyI6eyJBVURUIjoiUkVBRCIsIkRMT00iOiJFWEVDVVRFIiwiUFRUTSI6IldSSVRFIiwiU1RBVCI6IlJFQUQiLCJVU1JNIjoiV1JJVEUifSwicHJvZHVjdCI6ImRsbyIsInVzZXIiOnsiZW1haWwiOiJxYXAtMF9hZG1pbkBtYWlsaW5hdG9yLmNvbSIsImZpcnN0TmFtZSI6Ik5pbmEiLCJpZCI6IjBhNjQ0MWU0LTdjYmEtMWFkNy04MTdjLWJjZDlkN2VkMDViYSIsImxhbmd1YWdlIjoiZW4iLCJsYXN0TmFtZSI6IkhhbnNlbiIsIm9yZ2FuaXphdGlvbiI6eyJidXNpbmVzc05hbWUiOiJRQSBQcmFjdGljZSIsImNvdW50cnkiOiJERVUiLCJpZGVudGlmaWVyIjoicWFwLTAiLCJ0eXBlIjoiUFJBQ1RJQ0UifX0sInVzZXJfbmFtZSI6InFhcC0wL3FhcC0wX2FkbWluQG1haWxpbmF0b3IuY29tIn0sImlhdCI6MTY0MzE4MjM1OSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmRldi5pbnZlb3gvIiwianRpIjoiODYyNmM5ZDQtZDc5MC00NThlLTliNTctYWY5MjA4MmM0ODFkIiwibmJmIjoxNjQzMTgyMzU5LCJzY3AiOlsib3BlbmlkIiwib2ZmbGluZSJdLCJzdWIiOiJxYXAtMC9xYXAtMF9hZG1pbkBtYWlsaW5hdG9yLmNvbSJ9.a_0at2Tnkx74nq5e-9bURPSzeh7v0qOnq6xSq3QVhmP1lRnPzDW09YhRY-RWGq4QHZfoJaufyZbhdxEQDQkK6qRx2sGWBk8hpx5Rg8p8Guc9A1QOH7O5OzGximHK3cEXpUcBnaCaA9jbOc7oZrjvXCZs-pkytmZ-7O8TwaJfj1bruB4BZIYoYvrUj-G9A5JEI1zRa2v5cjdUjyPsnJQn0aEZm6M-cChFra5WGB_zabMJ4DWn9TWeXMMcbOlznK_D_rInWWVE6eo4VPF0FyOmew_JIK8L8KkatDHfiEJZcv8rYz9KxRtJxNMUKNmCHM2OGcHpoLPQvDQokXBcK7tZwgyCSBFZ_Di1Cm3iXD6pMIRTGdNRYEYpK6G_Zv2Tk2_gdg6J1V35AokOHejXfrSyhkjFbvYR5aJTb9tqTBJGTtOQbWvYeihXR37S7KkobMRAzAOk72k4RSLDHl9fQQ13wFlCfM3i5hZqp63F1yC_IEA0U0_7pty1AXS8FsNP03j4jE224G9jjQEykvPiv1RYVrLe4xQH54n0pwQQs8BtZrMG9hWfcxhlpLAmqb_74MFwYmhM3gvuZKNifz6kTsnLXA-Rdg5CUFsJoYJox0srAjjvgiIglPCKPyrwHVs-3iIhTekDjAIMWjdfLQvd-o9iBZEI1ueAtj1uSJ2wOv8kyzk"
+      }
+    })
+    assert.res_status(200, res)
+
+    local upstream_request = get_service_request(upstream)
+    assert.same('POST', upstream_request.method)
+    local req_json = cjson.decode(upstream_request.request)
+    assert.same({ x = "PRACTICE" }, req_json)
+  end)
+
+  it("should not change request content with templating from access token when token is corrupted", function()
+    upstream = http_server_with_body(upstream_port, cjson.encode(upstream_body), "200 OK")
+    helpers.wait_until(function()
+      return upstream:alive()
+    end, 3)
+    local res = proxy_client:get("/change_request_with_templating_with_auth_token_parsing", {
+      headers = {
+        host = "service.test",
+        authorization = "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6InB1YmxpYzpkOTA3NTA5OC01MzFlLTQ1MTQtYjI2NS03ZGRhNjA0NTg4YzkifQ.eyJhsadWQiOltdLCJjbGllbnRfaWQiOiJwb3J0YWxfY2xpZW50IiwiZXhwIjoxNjQzMTg1OTYwLCJleHQiOnsicHJpdmlsZWdlcyI6eyJBVURUIjoiUkVBRCIsIkRMT00iOiJFWEVDVVRFIiwiUFRUTSI6IldSSVRFIiwiU1RBVCI6IlJFQUQiLCJVU1JNIjoiV1JJVEUifSwicHJvZHVjdCI6ImRsbyIsInVzZXIiOnsiZW1haWwiOiJxYXAtMF9hZG1pbkBtYWlsaW5hdG9yLmNvbSIsImZpcnN0TmFtZSI6Ik5pbmEiLCJpZCI6IjBhNjQ0MWU0LTdjYmEtMWFkNy04MTdjLWJjZDlkN2VkMDViYSIsImxhbmd1YWdlIjoiZW4iLCJsYXN0TmFtZSI6IkhhbnNlbiIsIm9yZ2FuaXphdGlvbiI6eyJidXNpbmVzc05hbWUiOiJRQSBQcmFjdGljZSIsImNvdW50cnkiOiJERVUiLCJpZGVudGlmaWVyIjoicWFwLTAiLCJ0eXBlIjoiUFJBQ1RJQ0UifX0sInVzZXJfbmFtZSI6InFhcC0wL3FhcC0wX2FkbWluQG1haWxpbmF0b3IuY29tIn0sImlhdCI6MTY0MzE4MjM1OSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmRldi5pbnZlb3gvIiwianRpIjoiODYyNmM5ZDQtZDc5MC00NThlLTliNTctYWY5MjA4MmM0ODFkIiwibmJmIjoxNjQzMTgyMzU5LCJzY3AiOlsib3BlbmlkIiwib2ZmbGluZSJdLCJzdWIiOiJxYXAtMC9xYXAtMF9hZG1pbkBtYWlsaW5hdG9yLmNvbSJ9.a_0at2Tnkx74nq5e-9bURPSzeh7v0qOnq6xSq3QVhmP1lRnPzDW09YhRY-RWGq4QHZfoJaufyZbhdxEQDQkK6qRx2sGWBk8hpx5Rg8p8Guc9A1QOH7O5OzGximHK3cEXpUcBnaCaA9jbOc7oZrjvXCZs-pkytmZ-7O8TwaJfj1bruB4BZIYoYvrUj-G9A5JEI1zRa2v5cjdUjyPsnJQn0aEZm6M-cChFra5WGB_zabMJ4DWn9TWeXMMcbOlznK_D_rInWWVE6eo4VPF0FyOmew_JIK8L8KkatDHfiEJZcv8rYz9KxRtJxNMUKNmCHM2OGcHpoLPQvDQokXBcK7tZwgyCSBFZ_Di1Cm3iXD6pMIRTGdNRYEYpK6G_Zv2Tk2_gdg6J1V35AokOHejXfrSyhkjFbvYR5aJTb9tqTBJGTtOQbWvYeihXR37S7KkobMRAzAOk72k4RSLDHl9fQQ13wFlCfM3i5hZqp63F1yC_IEA0U0_7pty1AXS8FsNP03j4jE224G9jjQEykvPiv1RYVrLe4xQH54n0pwQQs8BtZrMG9hWfcxhlpLAmqb_74MFwYmhM3gvuZKNifz6kTsnLXA-Rdg5CUFsJoYJox0srAjjvgiIglPCKPyrwHVs-3iIhTekDjAIMWjdfLQvd-o9iBZEI1ueAtj1uSJ2wOv8kyzk"
+      }
+    })
+    assert.res_status(200, res)
+
+    local upstream_request = get_service_request(upstream)
+    assert.same('POST', upstream_request.method)
+    local req_json = cjson.decode(upstream_request.request)
+    assert.same({ x = "${auth_token.ext.user.organization.type}" }, req_json)
   end)
 
   it("should change request content with templating with naming", function()
